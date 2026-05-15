@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { Maximize2, Minimize2 } from "lucide-react";
 import WorldMapView from "@/components/WorldMapView";
+import ThreatActivityView from "@/components/ThreatActivityView";
 
 const alertData = [
   { date: "Mon", alerts: 320, blocked: 280 },
@@ -32,7 +33,7 @@ const fraudByType = [
   { type: "Collusion", count: 421 },
 ];
 
-const tabs = ["Overview", "Map"] as const;
+const tabs = ["Overview", "Map", "Threat Activity"] as const;
 type Tab = (typeof tabs)[number];
 
 export default function AnalyticsPage() {
@@ -59,8 +60,10 @@ export default function AnalyticsPage() {
         </h1>
         <p className="text-sm text-[var(--text-tertiary)] mt-1">
           {activeTab === "Overview"
-            ? "Fraud detection performance and trend analysis — last 7 days"
-            : "Global fraud intelligence — geographic distribution"}
+            ? "Fraud detection performance and trend analysis \u2014 last 7 days"
+            : activeTab === "Map"
+            ? "Global fraud intelligence \u2014 geographic loss distribution"
+            : "Real-time threat monitoring \u2014 highest-impact countries"}
         </p>
       </div>
       <button
@@ -163,14 +166,16 @@ export default function AnalyticsPage() {
       )}
 
       {activeTab === "Map" && <WorldMapView fullscreen={isFullscreen} />}
+
+      {activeTab === "Threat Activity" && <ThreatActivityView fullscreen={isFullscreen} />}
     </div>
   );
 
   const tabBar = (
     <div
       className={`${
-        isFullscreen ? "" : "-mx-6 -mb-6"
-      } mt-6 border-t border-[var(--border-primary)] bg-[var(--bg-tertiary)] overflow-hidden ${
+        isFullscreen ? "" : "-mx-6 -mb-6 mt-6"
+      } border-t border-[var(--border-primary)] bg-[var(--bg-tertiary)] overflow-hidden ${
         isFullscreen ? "" : "rounded-b-2xl"
       }`}
     >
@@ -192,11 +197,34 @@ export default function AnalyticsPage() {
     </div>
   );
 
-  /* ── fullscreen: fixed overlay covering the entire viewport ── */
+  /* ── fullscreen: map gets its own dedicated layout ── */
+  if (isFullscreen && activeTab === "Map") {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col">
+        {/* Map fills everything above the tab bar */}
+        <div className="relative flex-1 min-h-0">
+          <WorldMapView fullscreen />
+          {/* Minimize — floats on top of map */}
+          <div className="absolute top-3 right-3 z-10">
+            <button
+              onClick={() => setIsFullscreen(false)}
+              className="p-2 rounded-xl bg-[var(--bg-elevated)]/80 backdrop-blur-sm text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+              title="Exit fullscreen (Esc)"
+            >
+              <Minimize2 className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+            </button>
+          </div>
+        </div>
+        {tabBar}
+      </div>
+    );
+  }
+
+  /* ── fullscreen: charts ── */
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col bg-[var(--bg-primary)] overflow-y-auto">
-        <div className="flex-1 p-4 flex flex-col">
+      <div className="fixed inset-0 z-50 flex flex-col bg-[var(--bg-primary)]">
+        <div className="flex-1 p-4 overflow-y-auto flex flex-col">
           <div className="flex justify-end mb-2">
             <button
               onClick={() => setIsFullscreen(false)}
