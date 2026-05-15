@@ -16,6 +16,7 @@ import {
   Search,
   Scale,
   Zap,
+  Network,
 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 
@@ -32,6 +33,7 @@ const meshSection = [
   { label: "Signal Exchange", href: "/signal-exchange", icon: Radio },
   { label: "Query & Privacy", href: "/query-privacy", icon: Search },
   { label: "Governance", href: "/governance", icon: Scale },
+  { label: "Orchestration", href: "/orchestration", icon: Network },
 ];
 
 const toolsSection = [
