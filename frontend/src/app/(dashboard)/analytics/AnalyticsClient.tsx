@@ -95,7 +95,7 @@ export default function AnalyticsClient({ countryFraud, alertTrends, fraudByType
 
       {activeTab === "Map" && <WorldMapView fullscreen={isFullscreen} countryFraud={countryFraud} />}
 
-      {activeTab === "Threat Activity" && <ThreatActivityView fullscreen={isFullscreen} countryFraud={countryFraud} />}
+      {activeTab === "Threat Activity" && <ThreatActivityView fullscreen={isFullscreen} />}
     </div>
   );
 

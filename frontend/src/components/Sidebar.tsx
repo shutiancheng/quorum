@@ -17,6 +17,7 @@ import {
   Search,
   Scale,
   Zap,
+  Network,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
@@ -34,6 +35,7 @@ const sections = [
     { href: "/signal-exchange", icon: Radio, label: "Signal Exchange" },
     { href: "/query-privacy", icon: Search, label: "Query & Privacy" },
     { href: "/governance", icon: Scale, label: "Governance" },
+    { href: "/orchestration", icon: Network, label: "Orchestration" },
   ],
   [
     { href: "/attack-simulation", icon: Swords, label: "Attack Simulation" },

@@ -28,7 +28,29 @@ export interface CountryFraud {
   ato: number;      // ATO/collusion fraud %
 }
 
-/* Data is now fetched from Supabase and passed via props */
+/* Static country fraud data — exported for use by ThreatActivityView */
+export const COUNTRY_FRAUD: Record<string, CountryFraud> = {
+  "840": { name: "United States", iso2: "US", lossM: 612, rate: 0.060, app: 35, unauth: 25, fp: 25, ato: 15 },
+  "826": { name: "United Kingdom", iso2: "GB", lossM: 136, rate: 0.110, app: 40, unauth: 20, fp: 25, ato: 15 },
+  "276": { name: "Germany", iso2: "DE", lossM: 102, rate: 0.075, app: 25, unauth: 30, fp: 25, ato: 20 },
+  "250": { name: "France", iso2: "FR", lossM: 68, rate: 0.080, app: 28, unauth: 27, fp: 28, ato: 17 },
+  "036": { name: "Australia", iso2: "AU", lossM: 51, rate: 0.095, app: 38, unauth: 22, fp: 25, ato: 15 },
+  "076": { name: "Brazil", iso2: "BR", lossM: 51, rate: 0.120, app: 20, unauth: 35, fp: 20, ato: 25 },
+  "380": { name: "Italy", iso2: "IT", lossM: 42.5, rate: 0.085, app: 24, unauth: 30, fp: 26, ato: 20 },
+  "156": { name: "China", iso2: "CN", lossM: 42.5, rate: 0.070, app: 18, unauth: 35, fp: 20, ato: 27 },
+  "356": { name: "India", iso2: "IN", lossM: 42.5, rate: 0.120, app: 20, unauth: 32, fp: 22, ato: 26 },
+  "124": { name: "Canada", iso2: "CA", lossM: 42.5, rate: 0.055, app: 30, unauth: 28, fp: 27, ato: 15 },
+  "724": { name: "Spain", iso2: "ES", lossM: 34, rate: 0.078, app: 26, unauth: 28, fp: 28, ato: 18 },
+  "484": { name: "Mexico", iso2: "MX", lossM: 34, rate: 0.090, app: 22, unauth: 35, fp: 18, ato: 25 },
+  "566": { name: "Nigeria", iso2: "NG", lossM: 25.5, rate: 0.180, app: 12, unauth: 45, fp: 10, ato: 33 },
+  "643": { name: "Russia", iso2: "RU", lossM: 25.5, rate: 0.130, app: 15, unauth: 40, fp: 15, ato: 30 },
+  "392": { name: "Japan", iso2: "JP", lossM: 25.5, rate: 0.050, app: 22, unauth: 28, fp: 32, ato: 18 },
+  "528": { name: "Netherlands", iso2: "NL", lossM: 25.5, rate: 0.065, app: 30, unauth: 25, fp: 30, ato: 15 },
+};
+
+export const TOTAL_ANNUAL_LOSS_M = Math.round(
+  Object.values(COUNTRY_FRAUD).reduce((s, c) => s + c.lossM, 0) * 10
+) / 10;
 
 /* ═══ Helpers ═══ */
 function isoToFlag(iso2: string): string {
@@ -138,10 +160,10 @@ const HEIGHT = 500;
    ═══════════════════════════════════════════ */
 export default function WorldMapView({
   fullscreen = false,
-  countryFraud,
+  countryFraud = COUNTRY_FRAUD,
 }: {
   fullscreen?: boolean;
-  countryFraud: Record<string, CountryFraud>;
+  countryFraud?: Record<string, CountryFraud>;
 }) {
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
   const [hoveredHotspot, setHoveredHotspot] = useState<string | null>(null);
