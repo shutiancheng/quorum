@@ -127,6 +127,9 @@ const connections: [string, string][] = [
   ["New York", "London"], ["Singapore", "Sydney"],
 ];
 
+/* 8% YoY growth — 2025 baseline data → 2026 projection */
+const YOY_GROWTH = 1.08;
+
 const WIDTH = 960;
 const HEIGHT = 500;
 
@@ -157,16 +160,37 @@ export default function WorldMapView({
     return arr;
   }, [countryFraud]);
 
+  /* Pro-rata "today's losses" based on UK BST time of day (computed once on mount) */
+  const proRata = useMemo(() => {
+    const now = new Date();
+    // Use Europe/London — automatically handles BST (UTC+1) vs GMT (UTC+0)
+    const londonStr = now.toLocaleString("en-US", { timeZone: "Europe/London" });
+    const london = new Date(londonStr);
+    const dayFraction = (london.getHours() * 60 + london.getMinutes()) / (24 * 60);
+
+    let total = 0;
+    const perCountry: Record<string, number> = {};
+    Object.entries(countryFraud).forEach(([id, d]) => {
+      const countryDailyAvg = (d.lossM * YOY_GROWTH * 1_000_000) / 365;
+      const countryToday = Math.round(countryDailyAvg * dayFraction);
+      perCountry[id] = countryToday;
+      total += countryToday;
+    });
+
+    return { total, perCountry };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // intentionally [] — seed once on mount, simulation adds on top
+
   /* ── Simulation state ── */
   const [simEvents, setSimEvents] = useState<SimEvent[]>([]);
-  const [dailyTotals, setDailyTotals] = useState<Record<string, number>>({});
-  const [totalToday, setTotalToday] = useState(0);
+  const [dailyTotals, setDailyTotals] = useState<Record<string, number>>(proRata.perCountry);
+  const [totalToday, setTotalToday] = useState(proRata.total);
   const [flashId, setFlashId] = useState<string | null>(null);
   const eventIdRef = useRef(0);
 
   /* Smooth counter */
-  const targetTotalRef = useRef(0);
-  const [displayTotal, setDisplayTotal] = useState(0);
+  const targetTotalRef = useRef(proRata.total);
+  const [displayTotal, setDisplayTotal] = useState(proRata.total);
 
   /* ── D3 projection + path + GeoJSON ── */
   const { pathGen, countries } = useMemo(() => {
@@ -204,7 +228,7 @@ export default function WorldMapView({
         for (let i = 0; i < n; i++) {
           const cid = weightedPicker[Math.floor(Math.random() * weightedPicker.length)];
           const cd = countryFraud[cid];
-          const daily = (cd.lossM * 1_000_000) / 365;
+          const daily = (cd.lossM * YOY_GROWTH * 1_000_000) / 365;
           const amount = Math.round(daily * (0.0008 + Math.random() * 0.004));
           const status: SimEvent["status"] =
             Math.random() > 0.18 ? "blocked" : Math.random() > 0.5 ? "flagged" : "loss";
@@ -468,14 +492,14 @@ export default function WorldMapView({
         <span className="text-[10px] font-semibold text-red-400">LIVE</span>
       </div>
       <div className="bg-[var(--bg-elevated)]/85 backdrop-blur-sm border border-[var(--border-primary)] rounded-lg px-2.5 py-1.5">
-        <p className="text-[9px] text-[var(--text-tertiary)]">Annual Losses (2025)</p>
+        <p className="text-[9px] text-[var(--text-tertiary)]">Projected Losses (2026)</p>
         <p className="text-sm font-semibold text-[var(--fraud-critical)]">
-          ${(TOTAL_ANNUAL_LOSS_M / 1000).toFixed(2)}B
+          ${(TOTAL_ANNUAL_LOSS_M * YOY_GROWTH / 1000).toFixed(2)}B
         </p>
       </div>
       <div className="bg-[var(--bg-elevated)]/85 backdrop-blur-sm border border-[var(--border-primary)] rounded-lg px-2.5 py-1.5">
         <p className="text-[9px] text-[var(--text-tertiary)]">Today&apos;s Losses</p>
-        <p className="text-sm font-semibold text-[var(--fraud-warning)]">{fmtUSD(displayTotal)}</p>
+        <p className="text-sm font-semibold text-[var(--fraud-warning)] tabular-nums">${Math.round(displayTotal).toLocaleString()}</p>
       </div>
       <div className="bg-[var(--bg-elevated)]/85 backdrop-blur-sm border border-[var(--border-primary)] rounded-lg px-2.5 py-1.5">
         <p className="text-[9px] text-[var(--text-tertiary)]">Countries Monitored</p>
@@ -487,7 +511,7 @@ export default function WorldMapView({
   );
 
   const legendPanel = (
-    <div className="absolute top-3 right-3 bg-[var(--bg-elevated)]/80 backdrop-blur-sm border border-[var(--border-primary)] rounded-lg px-2.5 py-2 text-[10px]">
+    <div className="absolute top-14 right-3 bg-[var(--bg-elevated)]/80 backdrop-blur-sm border border-[var(--border-primary)] rounded-lg px-2.5 py-2 text-[10px]">
       <p className="font-medium text-[var(--text-secondary)] mb-1.5">Annual Fraud Loss</p>
       {[
         { label: "\u2265 $200M",   color: "#dc2626" },
@@ -518,16 +542,16 @@ export default function WorldMapView({
 
       <div className="mt-2 mb-2">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-[var(--text-tertiary)]">Annual Fraud Loss</span>
+          <span className="text-[var(--text-tertiary)]">Est. Loss (2026)</span>
           <span className="font-semibold" style={{ color: lossStroke(hoveredData.lossM) }}>
-            ${hoveredData.lossM.toFixed(1)}M
+            ${(hoveredData.lossM * YOY_GROWTH).toFixed(1)}M
           </span>
         </div>
         <div className="w-full h-1.5 rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-300"
             style={{
-              width: `${Math.min(100, (hoveredData.lossM / 612) * 100)}%`,
+              width: `${Math.min(100, (hoveredData.lossM * YOY_GROWTH / 661) * 100)}%`,
               backgroundColor: lossStroke(hoveredData.lossM),
             }}
           />
@@ -646,8 +670,8 @@ export default function WorldMapView({
     <div className="space-y-4">
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: "Annual Losses (2025)", value: `$${(TOTAL_ANNUAL_LOSS_M / 1000).toFixed(2)}B`, color: "var(--fraud-critical)" },
-          { label: "Today\u2019s Losses", value: fmtUSD(displayTotal), color: "var(--fraud-warning)" },
+          { label: "Projected Losses (2026)", value: `$${(TOTAL_ANNUAL_LOSS_M * YOY_GROWTH / 1000).toFixed(2)}B`, color: "var(--fraud-critical)" },
+          { label: "Today\u2019s Losses", value: `$${Math.round(displayTotal).toLocaleString()}`, color: "var(--fraud-warning)" },
           { label: "Countries Monitored", value: String(Object.keys(countryFraud).length), color: "var(--accent-color)" },
           { label: "Avg Block Rate", value: "82.3%", color: "var(--fraud-cleared)" },
         ].map((s) => (

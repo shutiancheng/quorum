@@ -60,7 +60,8 @@ function lossBarColor(lossM: number): string {
   return "#4ade80";
 }
 
-/* Pre-sorted ranking and weighted picker are computed from props inside the component */
+/* 8% YoY growth — 2025 baseline data → 2026 projection */
+const YOY_GROWTH = 1.08;
 
 /* ═══════════════════════════════════════════
    COMPONENT
@@ -89,15 +90,41 @@ export default function ThreatActivityView({
     });
     return arr;
   }, [countryFraud]);
+
+  /* Pro-rata seeding based on UK BST time of day (computed once on mount) */
+  const proRata = useMemo(() => {
+    const now = new Date();
+    const londonStr = now.toLocaleString("en-US", { timeZone: "Europe/London" });
+    const london = new Date(londonStr);
+    const dayFraction = (london.getHours() * 60 + london.getMinutes()) / (24 * 60);
+
+    let total = 0;
+    const perCountry: Record<string, number> = {};
+    Object.entries(countryFraud).forEach(([id, d]) => {
+      const countryDailyAvg = (d.lossM * YOY_GROWTH * 1_000_000) / 365;
+      const countryToday = Math.round(countryDailyAvg * dayFraction);
+      perCountry[id] = countryToday;
+      total += countryToday;
+    });
+
+    // Sim fires ~1.5 events / 2.2s → ~59k events/day
+    const eventsPerDay = Math.round((86400 / 2.2) * 1.5);
+    const events = Math.round(eventsPerDay * dayFraction);
+    const blocked = Math.round(events * 0.82);
+
+    return { total, perCountry, events, blocked };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   /* ── Simulation state ── */
   const [simEvents, setSimEvents] = useState<SimEvent[]>([]);
-  const [dailyTotals, setDailyTotals] = useState<Record<string, number>>({});
-  const [totalToday, setTotalToday] = useState(0);
-  const [eventsCount, setEventsCount] = useState(0);
-  const [blockedCount, setBlockedCount] = useState(0);
+  const [dailyTotals, setDailyTotals] = useState<Record<string, number>>(proRata.perCountry);
+  const [totalToday, setTotalToday] = useState(proRata.total);
+  const [eventsCount, setEventsCount] = useState(proRata.events);
+  const [blockedCount, setBlockedCount] = useState(proRata.blocked);
   const eventIdRef = useRef(0);
-  const targetTotalRef = useRef(0);
-  const [displayTotal, setDisplayTotal] = useState(0);
+  const targetTotalRef = useRef(proRata.total);
+  const [displayTotal, setDisplayTotal] = useState(proRata.total);
 
   /* ── Simulation interval ── */
   useEffect(() => {
@@ -114,7 +141,7 @@ export default function ThreatActivityView({
           const cid =
             WEIGHTED_PICKER[Math.floor(Math.random() * WEIGHTED_PICKER.length)];
           const cd = countryFraud[cid];
-          const daily = (cd.lossM * 1_000_000) / 365;
+          const daily = (cd.lossM * YOY_GROWTH * 1_000_000) / 365;
           const amount = Math.round(daily * (0.0008 + Math.random() * 0.004));
           const status: SimEvent["status"] =
             Math.random() > 0.18
@@ -182,13 +209,13 @@ export default function ThreatActivityView({
       <div className="grid grid-cols-4 gap-3">
         {[
           {
-            label: "Annual Losses (2025)",
-            value: `$${(TOTAL_ANNUAL_LOSS_M / 1000).toFixed(2)}B`,
+            label: "Projected Losses (2026)",
+            value: `$${(TOTAL_ANNUAL_LOSS_M * YOY_GROWTH / 1000).toFixed(2)}B`,
             color: "var(--fraud-critical)",
           },
           {
             label: "Today\u2019s Losses",
-            value: fmtUSD(displayTotal),
+            value: `$${Math.round(displayTotal).toLocaleString()}`,
             color: "var(--fraud-warning)",
           },
           {
@@ -262,7 +289,7 @@ export default function ThreatActivityView({
                     className="text-right font-semibold"
                     style={{ color: lossBarColor(c.lossM) }}
                   >
-                    ${c.lossM.toFixed(1)}M
+                    ${(c.lossM * YOY_GROWTH).toFixed(1)}M
                   </span>
                   <span className="text-right font-medium text-[var(--fraud-warning)]">
                     {todayLoss > 0 ? fmtUSD(todayLoss) : "\u2014"}
