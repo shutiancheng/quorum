@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   AreaChart,
   Area,
@@ -12,6 +12,7 @@ import {
   BarChart,
   Bar,
 } from "recharts";
+import { Maximize2, Minimize2 } from "lucide-react";
 import WorldMapView from "@/components/WorldMapView";
 
 const alertData = [
@@ -36,11 +37,23 @@ type Tab = (typeof tabs)[number];
 
 export default function AnalyticsPage() {
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
-  return (
-    <div className="flex flex-col min-h-[calc(100vh-16px-48px)]">
-      {/* Header */}
-      <div className="mb-6">
+  const exitFullscreen = useCallback(() => setIsFullscreen(false), []);
+
+  useEffect(() => {
+    if (!isFullscreen) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") exitFullscreen();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [isFullscreen, exitFullscreen]);
+
+  /* ── shared content ── */
+  const header = (
+    <div className="flex items-center justify-between mb-6">
+      <div>
         <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
           Analytics
         </h1>
@@ -50,111 +63,162 @@ export default function AnalyticsPage() {
             : "Global fraud intelligence — geographic distribution"}
         </p>
       </div>
-
-      {/* Content */}
-      <div className="flex-1">
-        {activeTab === "Overview" && (
-          <div className="grid grid-cols-2 gap-4">
-            {/* Alert Trend */}
-            <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-5">
-              <h3 className="font-semibold text-[var(--text-primary)] mb-4">
-                Alert Trend
-              </h3>
-              <ResponsiveContainer width="100%" height={200}>
-                <AreaChart data={alertData}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="var(--border-primary)"
-                  />
-                  <XAxis
-                    dataKey="date"
-                    tick={{ fontSize: 12, fill: "var(--text-tertiary)" }}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 12, fill: "var(--text-tertiary)" }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "var(--bg-elevated)",
-                      border: "1px solid var(--border-primary)",
-                      borderRadius: 12,
-                      fontSize: 13,
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="alerts"
-                    stroke="var(--fraud-critical)"
-                    fill="var(--fraud-critical-bg)"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="blocked"
-                    stroke="var(--fraud-cleared)"
-                    fill="var(--fraud-cleared-bg)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Fraud by Type */}
-            <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-5">
-              <h3 className="font-semibold text-[var(--text-primary)] mb-4">
-                Fraud by Type
-              </h3>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={fraudByType}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="var(--border-primary)"
-                  />
-                  <XAxis
-                    dataKey="type"
-                    tick={{ fontSize: 12, fill: "var(--text-tertiary)" }}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 12, fill: "var(--text-tertiary)" }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "var(--bg-elevated)",
-                      border: "1px solid var(--border-primary)",
-                      borderRadius: 12,
-                      fontSize: 13,
-                    }}
-                  />
-                  <Bar
-                    dataKey="count"
-                    fill="var(--accent-color)"
-                    radius={[6, 6, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+      <button
+        onClick={() => setIsFullscreen((v) => !v)}
+        className="p-2 rounded-xl text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+        title={isFullscreen ? "Exit fullscreen (Esc)" : "Fullscreen"}
+      >
+        {isFullscreen ? (
+          <Minimize2 className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+        ) : (
+          <Maximize2 className="w-4 h-4 shrink-0" strokeWidth={1.5} />
         )}
+      </button>
+    </div>
+  );
 
-        {activeTab === "Map" && <WorldMapView />}
-      </div>
+  const chartHeight = isFullscreen ? 360 : 200;
 
-      {/* ── Excel-style bottom tab bar ── */}
-      <div className="-mx-6 -mb-6 mt-6 border-t border-[var(--border-primary)] bg-[var(--bg-tertiary)] rounded-b-2xl">
-        <div className="flex items-end h-9 px-1 gap-px">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`relative px-4 h-[calc(100%-1px)] text-xs font-medium transition-colors rounded-b-md ${
-                activeTab === tab
-                  ? "bg-[var(--bg-primary)] text-[var(--text-primary)] border-x border-b border-[var(--border-primary)] -top-px"
-                  : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--sidebar-item-hover)]"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
+  const content = (
+    <div className={`flex-1 ${isFullscreen && activeTab === "Map" ? "flex flex-col min-h-0" : ""}`}>
+      {activeTab === "Overview" && (
+        <div className="grid grid-cols-2 gap-4">
+          {/* Alert Trend */}
+          <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-5">
+            <h3 className="font-semibold text-[var(--text-primary)] mb-4">
+              Alert Trend
+            </h3>
+            <ResponsiveContainer width="100%" height={chartHeight}>
+              <AreaChart data={alertData}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--border-primary)"
+                />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 12, fill: "var(--text-tertiary)" }}
+                />
+                <YAxis
+                  tick={{ fontSize: 12, fill: "var(--text-tertiary)" }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "var(--bg-elevated)",
+                    border: "1px solid var(--border-primary)",
+                    borderRadius: 12,
+                    fontSize: 13,
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="alerts"
+                  stroke="var(--fraud-critical)"
+                  fill="var(--fraud-critical-bg)"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="blocked"
+                  stroke="var(--fraud-cleared)"
+                  fill="var(--fraud-cleared-bg)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Fraud by Type */}
+          <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-5">
+            <h3 className="font-semibold text-[var(--text-primary)] mb-4">
+              Fraud by Type
+            </h3>
+            <ResponsiveContainer width="100%" height={chartHeight}>
+              <BarChart data={fraudByType}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--border-primary)"
+                />
+                <XAxis
+                  dataKey="type"
+                  tick={{ fontSize: 12, fill: "var(--text-tertiary)" }}
+                />
+                <YAxis
+                  tick={{ fontSize: 12, fill: "var(--text-tertiary)" }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "var(--bg-elevated)",
+                    border: "1px solid var(--border-primary)",
+                    borderRadius: 12,
+                    fontSize: 13,
+                  }}
+                />
+                <Bar
+                  dataKey="count"
+                  fill="var(--accent-color)"
+                  radius={[6, 6, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
+      )}
+
+      {activeTab === "Map" && <WorldMapView fullscreen={isFullscreen} />}
+    </div>
+  );
+
+  const tabBar = (
+    <div
+      className={`${
+        isFullscreen ? "" : "-mx-6 -mb-6"
+      } mt-6 border-t border-[var(--border-primary)] bg-[var(--bg-tertiary)] overflow-hidden ${
+        isFullscreen ? "" : "rounded-b-2xl"
+      }`}
+    >
+      <div className="flex items-stretch h-9">
+        {tabs.map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-5 text-xs font-medium transition-colors border-r border-[var(--border-primary)] ${
+              activeTab === tab
+                ? "bg-[var(--bg-primary)] text-[var(--text-primary)]"
+                : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--sidebar-item-hover)]"
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
       </div>
+    </div>
+  );
+
+  /* ── fullscreen: fixed overlay covering the entire viewport ── */
+  if (isFullscreen) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col bg-[var(--bg-primary)] overflow-y-auto">
+        <div className="flex-1 p-4 flex flex-col">
+          <div className="flex justify-end mb-2">
+            <button
+              onClick={() => setIsFullscreen(false)}
+              className="p-2 rounded-xl text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+              title="Exit fullscreen (Esc)"
+            >
+              <Minimize2 className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+            </button>
+          </div>
+          {content}
+        </div>
+        {tabBar}
+      </div>
+    );
+  }
+
+  /* ── normal mode ── */
+  return (
+    <div className="flex flex-col min-h-[calc(100vh-16px-48px)]">
+      {header}
+      {content}
+      {tabBar}
     </div>
   );
 }

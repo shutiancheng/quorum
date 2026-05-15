@@ -1,7 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import { geoNaturalEarth1, geoPath, geoCentroid } from "d3-geo";
+import { feature } from "topojson-client";
+import type { Topology } from "topojson-specification";
+import type { FeatureCollection, Feature, Geometry } from "geojson";
+import topology from "@/data/countries-110m.json";
 
+/* ── Region fraud data (synthetic) ── */
 const regionData: Record<
   string,
   { name: string; cases: number; blocked: number; risk: number }
@@ -10,7 +16,12 @@ const regionData: Record<
   sa: { name: "South America", cases: 1280, blocked: 1050, risk: 0.45 },
   eu: { name: "Europe", cases: 4100, blocked: 3650, risk: 0.91 },
   af: { name: "Africa", cases: 890, blocked: 710, risk: 0.32 },
-  ru: { name: "Russia & Central Asia", cases: 1840, blocked: 1520, risk: 0.65 },
+  ru: {
+    name: "Russia & Central Asia",
+    cases: 1840,
+    blocked: 1520,
+    risk: 0.65,
+  },
   me: { name: "Middle East", cases: 1560, blocked: 1280, risk: 0.58 },
   sa_asia: { name: "South Asia", cases: 2340, blocked: 1980, risk: 0.71 },
   ea: { name: "East Asia", cases: 3890, blocked: 3420, risk: 0.87 },
@@ -18,119 +29,185 @@ const regionData: Record<
   oc: { name: "Oceania", cases: 720, blocked: 640, risk: 0.28 },
 };
 
-/* Simplified region outlines — viewBox 0 0 1000 500, equirectangular style */
-const regions = [
-  {
-    id: "na",
-    path: "M 80 55 L 120 42 L 155 45 L 200 50 L 250 60 L 290 75 L 320 100 L 310 120 L 300 140 L 285 160 L 275 178 L 255 195 L 240 200 L 220 198 L 210 195 L 190 185 L 175 160 L 160 135 L 155 115 L 130 95 L 100 82 L 80 75 Z",
-  },
-  {
-    id: "gl",
-    path: "M 340 35 L 365 25 L 385 30 L 395 45 L 390 60 L 378 70 L 358 72 L 345 62 L 340 48 Z",
-  },
-  {
-    id: "sa",
-    path: "M 290 235 L 310 228 L 330 225 L 355 232 L 380 248 L 395 265 L 392 290 L 385 310 L 370 330 L 355 348 L 340 368 L 325 385 L 315 390 L 305 382 L 298 365 L 295 340 L 290 310 L 285 285 L 280 265 L 278 250 Z",
-  },
-  {
-    id: "eu",
-    path: "M 465 85 L 478 78 L 495 72 L 510 68 L 530 62 L 545 58 L 555 60 L 568 65 L 575 72 L 572 82 L 570 95 L 565 108 L 558 118 L 550 128 L 540 135 L 530 140 L 518 138 L 508 140 L 500 138 L 492 142 L 485 140 L 478 132 L 470 120 L 465 108 L 463 95 Z",
-  },
-  {
-    id: "af",
-    path: "M 460 172 L 478 165 L 498 160 L 518 158 L 538 160 L 558 165 L 575 172 L 590 185 L 600 200 L 608 220 L 610 242 L 608 265 L 600 288 L 588 308 L 575 325 L 560 338 L 545 342 L 530 335 L 518 322 L 508 305 L 498 285 L 488 265 L 478 245 L 468 225 L 460 205 L 458 188 Z",
-  },
-  {
-    id: "ru",
-    path: "M 575 72 L 600 60 L 640 52 L 700 48 L 760 46 L 820 48 L 870 52 L 910 58 L 940 68 L 950 78 L 942 88 L 930 95 L 900 102 L 865 108 L 820 112 L 770 115 L 720 116 L 680 118 L 645 120 L 615 115 L 595 108 L 580 98 L 575 85 Z",
-  },
-  {
-    id: "me",
-    path: "M 590 140 L 610 132 L 632 135 L 650 142 L 658 155 L 655 170 L 645 180 L 628 185 L 612 182 L 598 175 L 590 162 L 588 150 Z",
-  },
-  {
-    id: "sa_asia",
-    path: "M 668 148 L 690 142 L 712 145 L 728 155 L 730 170 L 725 188 L 715 205 L 700 215 L 688 218 L 678 210 L 670 195 L 665 178 L 665 162 Z",
-  },
-  {
-    id: "ea",
-    path: "M 730 102 L 758 95 L 790 98 L 820 105 L 845 112 L 862 122 L 868 138 L 862 152 L 848 162 L 830 172 L 808 178 L 788 178 L 768 172 L 750 162 L 738 148 L 732 132 L 730 118 Z",
-  },
-  {
-    id: "jp",
-    path: "M 878 118 L 886 112 L 892 118 L 894 132 L 890 148 L 884 156 L 876 150 L 874 138 L 876 128 Z",
-  },
-  {
-    id: "sea",
-    path: "M 758 192 L 778 185 L 798 188 L 818 195 L 828 208 L 825 222 L 815 232 L 798 235 L 778 232 L 762 222 L 755 210 Z",
-  },
-  {
-    id: "idn",
-    path: "M 785 242 L 810 238 L 840 240 L 862 244 L 870 252 L 865 260 L 845 262 L 820 260 L 798 258 L 782 254 L 780 248 Z",
-  },
-  {
-    id: "oc",
-    path: "M 838 292 L 862 282 L 888 280 L 908 288 L 918 302 L 920 320 L 912 338 L 898 348 L 880 352 L 862 348 L 848 338 L 840 322 L 836 308 Z",
-  },
-  {
-    id: "nz",
-    path: "M 938 335 L 944 328 L 948 338 L 946 352 L 940 360 L 934 354 L 936 342 Z",
-  },
-];
-
-const regionParent: Record<string, string> = {
-  gl: "na",
-  jp: "ea",
-  idn: "sea",
-  nz: "oc",
-  na: "na",
-  sa: "sa",
-  eu: "eu",
-  af: "af",
-  ru: "ru",
-  me: "me",
-  sa_asia: "sa_asia",
-  ea: "ea",
-  sea: "sea",
-  oc: "oc",
+/* ── ISO 3166-1 numeric → region ── */
+const countryToRegion: Record<string, string> = {
+  // North America
+  "840": "na","124": "na","484": "na","044": "na","052": "na","084": "na",
+  "188": "na","192": "na","212": "na","214": "na","222": "na","308": "na",
+  "320": "na","332": "na","340": "na","388": "na","558": "na","591": "na",
+  "659": "na","662": "na","670": "na","780": "na","304": "na","630": "na",
+  // South America
+  "032": "sa","068": "sa","076": "sa","152": "sa","170": "sa","218": "sa",
+  "254": "sa","328": "sa","600": "sa","604": "sa","740": "sa","858": "sa",
+  "862": "sa",
+  // Europe
+  "008": "eu","020": "eu","040": "eu","056": "eu","070": "eu","100": "eu",
+  "191": "eu","196": "eu","203": "eu","208": "eu","233": "eu","246": "eu",
+  "250": "eu","276": "eu","300": "eu","348": "eu","352": "eu","372": "eu",
+  "380": "eu","428": "eu","440": "eu","442": "eu","807": "eu","470": "eu",
+  "498": "eu","492": "eu","499": "eu","528": "eu","578": "eu","616": "eu",
+  "620": "eu","642": "eu","688": "eu","703": "eu","705": "eu","724": "eu",
+  "752": "eu","756": "eu","826": "eu","804": "eu","112": "eu",
+  // Russia & Central Asia
+  "643": "ru","398": "ru","860": "ru","795": "ru","417": "ru","762": "ru",
+  "496": "ru","268": "ru","051": "ru","031": "ru",
+  // Middle East
+  "792": "me","682": "me","784": "me","634": "me","414": "me","048": "me",
+  "512": "me","887": "me","368": "me","760": "me","400": "me","422": "me",
+  "376": "me","275": "me","364": "me",
+  // South Asia
+  "356": "sa_asia","586": "sa_asia","050": "sa_asia","144": "sa_asia",
+  "524": "sa_asia","064": "sa_asia","004": "sa_asia","462": "sa_asia",
+  // East Asia
+  "156": "ea","392": "ea","410": "ea","408": "ea","158": "ea",
+  // Southeast Asia
+  "764": "sea","704": "sea","458": "sea","360": "sea","608": "sea",
+  "104": "sea","116": "sea","418": "sea","702": "sea","096": "sea",
+  "626": "sea",
+  // Oceania
+  "036": "oc","554": "oc","598": "oc","242": "oc","090": "oc","548": "oc",
+  "882": "oc","776": "oc","296": "oc","540": "oc",
+  // Africa
+  "012": "af","024": "af","204": "af","072": "af","854": "af","108": "af",
+  "120": "af","132": "af","140": "af","148": "af","174": "af","178": "af",
+  "180": "af","262": "af","818": "af","226": "af","232": "af","748": "af",
+  "231": "af","266": "af","270": "af","288": "af","324": "af","624": "af",
+  "384": "af","404": "af","426": "af","430": "af","434": "af","450": "af",
+  "454": "af","466": "af","478": "af","480": "af","504": "af","508": "af",
+  "516": "af","562": "af","566": "af","646": "af","678": "af","686": "af",
+  "694": "af","706": "af","710": "af","728": "af","729": "af","834": "af",
+  "768": "af","788": "af","800": "af","894": "af","716": "af","732": "af",
 };
 
+/* ── Hotspot cities ── */
 const hotspots = [
-  { name: "New York", x: 290, y: 130, region: "na" },
-  { name: "London", x: 490, y: 95, region: "eu" },
-  { name: "Frankfurt", x: 520, y: 100, region: "eu" },
-  { name: "Lagos", x: 510, y: 235, region: "af" },
-  { name: "Dubai", x: 635, y: 158, region: "me" },
-  { name: "Mumbai", x: 695, y: 195, region: "sa_asia" },
-  { name: "Shanghai", x: 820, y: 140, region: "ea" },
-  { name: "Tokyo", x: 885, y: 130, region: "ea" },
-  { name: "Singapore", x: 798, y: 245, region: "sea" },
-  { name: "São Paulo", x: 350, y: 320, region: "sa" },
-  { name: "Sydney", x: 900, y: 330, region: "oc" },
-  { name: "Moscow", x: 600, y: 78, region: "ru" },
+  { name: "New York", coords: [-74, 40.7] as [number, number], region: "na" },
+  { name: "London", coords: [-0.1, 51.5] as [number, number], region: "eu" },
+  { name: "Frankfurt", coords: [8.7, 50.1] as [number, number], region: "eu" },
+  { name: "Lagos", coords: [3.4, 6.5] as [number, number], region: "af" },
+  { name: "Dubai", coords: [55.3, 25.2] as [number, number], region: "me" },
+  { name: "Mumbai", coords: [72.9, 19.0] as [number, number], region: "sa_asia" },
+  { name: "Shanghai", coords: [121.5, 31.2] as [number, number], region: "ea" },
+  { name: "Tokyo", coords: [139.7, 35.7] as [number, number], region: "ea" },
+  { name: "Singapore", coords: [103.8, 1.35] as [number, number], region: "sea" },
+  { name: "São Paulo", coords: [-46.6, -23.5] as [number, number], region: "sa" },
+  { name: "Sydney", coords: [151.2, -33.9] as [number, number], region: "oc" },
+  { name: "Moscow", coords: [37.6, 55.8] as [number, number], region: "ru" },
 ];
 
-const connections = [
-  { from: "London", to: "New York" },
-  { from: "London", to: "Frankfurt" },
-  { from: "London", to: "Dubai" },
-  { from: "Dubai", to: "Mumbai" },
-  { from: "Shanghai", to: "Tokyo" },
-  { from: "Shanghai", to: "Singapore" },
-  { from: "New York", to: "São Paulo" },
-  { from: "Moscow", to: "Shanghai" },
-  { from: "Lagos", to: "London" },
+const connections: [string, string][] = [
+  ["London", "New York"],
+  ["London", "Frankfurt"],
+  ["London", "Dubai"],
+  ["Dubai", "Mumbai"],
+  ["Shanghai", "Tokyo"],
+  ["Shanghai", "Singapore"],
+  ["New York", "São Paulo"],
+  ["Moscow", "Shanghai"],
+  ["Lagos", "London"],
 ];
 
-function getRiskColor(risk: number): string {
+/* ── Deterministic per-country data from region totals ── */
+function seededRand(seed: number) {
+  let x = Math.sin(seed + 1) * 10000;
+  return x - Math.floor(x);
+}
+
+type CountryStats = {
+  name: string;
+  region: string;
+  cases: number;
+  blocked: number;
+  risk: number;
+  blockRate: number;
+};
+
+function getCountryStats(
+  isoId: string,
+  countryName: string
+): CountryStats | null {
+  const regionId = countryToRegion[isoId];
+  if (!regionId) return null;
+  const region = regionData[regionId];
+  // Count how many countries share this region
+  const siblings = Object.values(countryToRegion).filter(
+    (r) => r === regionId
+  ).length;
+  const seed = parseInt(isoId, 10);
+  const weight = 0.3 + seededRand(seed) * 1.4; // 0.3–1.7x
+  const baseCases = Math.round((region.cases / siblings) * weight);
+  const riskVariance = (seededRand(seed + 99) - 0.5) * 0.2;
+  const countryRisk = Math.min(1, Math.max(0.05, region.risk + riskVariance));
+  const countryBlocked = Math.round(baseCases * (0.7 + seededRand(seed + 50) * 0.25));
+  return {
+    name: countryName,
+    region: region.name,
+    cases: Math.max(1, baseCases),
+    blocked: Math.min(countryBlocked, baseCases),
+    risk: countryRisk,
+    blockRate: baseCases > 0 ? countryBlocked / baseCases : 0,
+  };
+}
+
+/* ── Colour helpers ── */
+function riskColor(risk: number) {
   if (risk >= 0.8) return "var(--fraud-critical)";
   if (risk >= 0.6) return "var(--fraud-warning)";
   if (risk >= 0.4) return "var(--accent-color)";
   return "var(--fraud-cleared)";
 }
 
-export default function WorldMapView() {
+function riskFill(risk: number, opacity = 0.55) {
+  // Inline rgba so SVG fills work without CSS var interpolation issues
+  if (risk >= 0.8) return `rgba(220,38,38,${opacity})`;
+  if (risk >= 0.6) return `rgba(245,158,11,${opacity})`;
+  if (risk >= 0.4) return `rgba(120,132,167,${opacity})`;
+  return `rgba(22,163,74,${opacity})`;
+}
+
+/* ── Map dimensions ── */
+const WIDTH = 960;
+const HEIGHT = 500;
+
+export default function WorldMapView({ fullscreen = false }: { fullscreen?: boolean }) {
   const [hovered, setHovered] = useState<string | null>(null);
+  const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
+
+  /* Build projection + path generator + GeoJSON features once */
+  const { pathGen, countries } = useMemo(() => {
+    const topo = topology as unknown as Topology;
+    const geo = feature(
+      topo,
+      topo.objects.countries
+    ) as unknown as FeatureCollection;
+
+    const proj = geoNaturalEarth1()
+      .fitSize([WIDTH, HEIGHT], geo)
+      .translate([WIDTH / 2, HEIGHT / 2 + 10]);
+
+    const pg = geoPath().projection(proj);
+
+    return {
+      pathGen: pg,
+      countries: geo.features as Feature<Geometry, { name?: string }>[],
+      projection: proj,
+    };
+  }, []);
+
+  /* Project hotspot coordinates to SVG pixels */
+  const projectedHotspots = useMemo(() => {
+    const proj = geoNaturalEarth1()
+      .fitSize([WIDTH, HEIGHT], {
+        type: "FeatureCollection",
+        features: countries,
+      })
+      .translate([WIDTH / 2, HEIGHT / 2 + 10]);
+
+    return hotspots.map((h) => {
+      const pt = proj(h.coords);
+      return { ...h, x: pt?.[0] ?? 0, y: pt?.[1] ?? 0 };
+    });
+  }, [countries]);
 
   const totalCases = Object.values(regionData).reduce(
     (s, r) => s + r.cases,
@@ -140,35 +217,313 @@ export default function WorldMapView() {
     (s, r) => s + r.blocked,
     0
   );
+  /* Per-country stats for hovered country */
+  const hoveredCountryStats = useMemo(() => {
+    if (!hoveredCountry) return null;
+    const feat = countries.find(
+      (g) => String((g as any).id) === hoveredCountry
+    );
+    const name = (feat as any)?.properties?.name ?? "Unknown";
+    return getCountryStats(hoveredCountry, name);
+  }, [hoveredCountry, countries]);
 
-  const hoveredData = hovered ? regionData[hovered] : null;
+  /* ── zoom / pan state (fullscreen only) ── */
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const mapContainerRef = useRef<HTMLDivElement>(null);
 
+  /* Native wheel listener with { passive: false } so preventDefault works for pinch */
+  useEffect(() => {
+    if (!fullscreen) return;
+    const el = mapContainerRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.08 : 0.08;
+      setZoom((z) => Math.min(Math.max(z + delta, 0.5), 5));
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [fullscreen]);
+
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      if (!fullscreen) return;
+      setIsPanning(true);
+      setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+      (e.target as Element).setPointerCapture(e.pointerId);
+    },
+    [fullscreen, pan]
+  );
+
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!isPanning) return;
+      setPan({ x: e.clientX - panStart.x, y: e.clientY - panStart.y });
+    },
+    [isPanning, panStart]
+  );
+
+  const handlePointerUp = useCallback(() => setIsPanning(false), []);
+
+  const stats = [
+    {
+      label: "Global Cases",
+      value: totalCases.toLocaleString(),
+      color: "var(--fraud-critical)",
+    },
+    {
+      label: "Blocked",
+      value: totalBlocked.toLocaleString(),
+      color: "var(--fraud-cleared)",
+    },
+    {
+      label: "Block Rate",
+      value: `${((totalBlocked / totalCases) * 100).toFixed(1)}%`,
+      color: "var(--accent-color)",
+    },
+    {
+      label: "Active Regions",
+      value: Object.keys(regionData).length.toString(),
+      color: "var(--fraud-review)",
+    },
+  ];
+
+  /* ── Shared SVG internals ── */
+  const mapSvgContents = () => (
+    <>
+      <defs>
+        <linearGradient id="flowGrad" x1="0%" y1="20%" x2="100%" y2="80%">
+          <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.10" />
+          <stop offset="25%" stopColor="#818cf8" stopOpacity="0.14" />
+          <stop offset="50%" stopColor="#f472b6" stopOpacity="0.12" />
+          <stop offset="75%" stopColor="#fbbf24" stopOpacity="0.10" />
+          <stop offset="100%" stopColor="#34d399" stopOpacity="0.08" />
+        </linearGradient>
+        <filter id="dotGlow" x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur stdDeviation="3.5" result="b" />
+          <feMerge>
+            <feMergeNode in="b" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      <rect width={WIDTH} height={HEIGHT} fill="var(--bg-secondary)" rx="0" />
+
+      <g opacity="0.12" stroke="var(--border-secondary)" strokeWidth="0.4">
+        {Array.from({ length: 9 }, (_, i) => {
+          const y = ((i + 1) / 10) * HEIGHT;
+          return <line key={`h${i}`} x1="0" y1={y} x2={WIDTH} y2={y} />;
+        })}
+        {Array.from({ length: 19 }, (_, i) => {
+          const x = ((i + 1) / 20) * WIDTH;
+          return <line key={`v${i}`} x1={x} y1="0" x2={x} y2={HEIGHT} />;
+        })}
+      </g>
+
+      {countries.map((geo, i) => {
+        const id = String((geo as any).id ?? i);
+        const regionId = countryToRegion[id];
+        const data = regionId ? regionData[regionId] : null;
+        const d = pathGen(geo) ?? "";
+        const isCountryHovered = hoveredCountry === id;
+        return (
+          <path
+            key={id}
+            d={d}
+            fill={data ? riskFill(data.risk, isCountryHovered ? 0.75 : 0.4) : "var(--bg-tertiary)"}
+            stroke={isCountryHovered ? riskColor(data?.risk ?? 0) : "var(--border-primary)"}
+            strokeWidth={isCountryHovered ? 1.4 : 0.4}
+            className="cursor-pointer"
+            style={{ transition: "fill 0.25s ease, stroke-width 0.25s ease" }}
+            onMouseEnter={() => {
+              if (regionId) setHovered(regionId);
+              setHoveredCountry(id);
+            }}
+            onMouseLeave={() => {
+              setHovered(null);
+              setHoveredCountry(null);
+            }}
+          />
+        );
+      })}
+
+      <rect width={WIDTH} height={HEIGHT} fill="url(#flowGrad)" pointerEvents="none" />
+
+      {connections.map(([fromName, toName], i) => {
+        const a = projectedHotspots.find((h) => h.name === fromName);
+        const b = projectedHotspots.find((h) => h.name === toName);
+        if (!a || !b) return null;
+        const mx = (a.x + b.x) / 2;
+        const my = Math.min(a.y, b.y) - 30;
+        return (
+          <path
+            key={i}
+            d={`M ${a.x} ${a.y} Q ${mx} ${my} ${b.x} ${b.y}`}
+            fill="none"
+            stroke="var(--accent-color)"
+            strokeWidth="0.8"
+            strokeOpacity="0.22"
+            strokeDasharray="5 3"
+            pointerEvents="none"
+          />
+        );
+      })}
+
+      {projectedHotspots.map((spot) => {
+        const data = regionData[spot.region];
+        if (!data) return null;
+        const active = hovered === spot.region;
+        const color = riskColor(data.risk);
+        return (
+          <g key={spot.name}>
+            <circle cx={spot.x} cy={spot.y} r="5" fill="none" stroke={color} strokeWidth="0.6">
+              <animate attributeName="r" values="4;13;4" dur="3.5s" repeatCount="indefinite" />
+              <animate attributeName="stroke-opacity" values="0.5;0;0.5" dur="3.5s" repeatCount="indefinite" />
+            </circle>
+            <circle cx={spot.x} cy={spot.y} r={active ? 10 : 7} fill={color} fillOpacity={0.12} filter="url(#dotGlow)" style={{ transition: "r 0.3s ease" }} pointerEvents="none" />
+            <circle cx={spot.x} cy={spot.y} r={active ? 3.5 : 2.5} fill={color} fillOpacity={0.9} className="cursor-pointer" style={{ transition: "r 0.3s ease" }} onMouseEnter={() => setHovered(spot.region)} onMouseLeave={() => setHovered(null)} />
+            {active && (
+              <text x={spot.x} y={spot.y - 14} textAnchor="middle" fill="var(--text-primary)" fontSize="9" fontWeight="600" pointerEvents="none">
+                {spot.name}
+              </text>
+            )}
+          </g>
+        );
+      })}
+    </>
+  );
+
+  /* ── Shared overlays ── */
+  const countryPanel = hoveredCountryStats && (
+    <div className="absolute bottom-3 left-3 bg-[var(--bg-elevated)]/90 backdrop-blur-sm border border-[var(--border-primary)] rounded-xl px-4 py-3 shadow-lg text-xs pointer-events-none animate-card-in min-w-[200px]">
+      <p className="font-semibold text-[var(--text-primary)] text-sm">
+        {hoveredCountryStats.name}
+      </p>
+      <p className="text-[10px] text-[var(--text-tertiary)] mb-2">
+        {hoveredCountryStats.region}
+      </p>
+
+      {/* Risk bar */}
+      <div className="mb-2">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-[var(--text-tertiary)]">Risk Score</span>
+          <span className="font-semibold" style={{ color: riskColor(hoveredCountryStats.risk) }}>
+            {(hoveredCountryStats.risk * 100).toFixed(0)}%
+          </span>
+        </div>
+        <div className="w-full h-1.5 rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
+          <div
+            className="h-full rounded-full"
+            style={{
+              width: `${hoveredCountryStats.risk * 100}%`,
+              backgroundColor: riskColor(hoveredCountryStats.risk),
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Stats grid */}
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+        <div>
+          <span className="text-[var(--text-tertiary)]">Cases</span>
+          <p className="text-[var(--fraud-critical)] font-medium">
+            {hoveredCountryStats.cases.toLocaleString()}
+          </p>
+        </div>
+        <div>
+          <span className="text-[var(--text-tertiary)]">Blocked</span>
+          <p className="text-[var(--fraud-cleared)] font-medium">
+            {hoveredCountryStats.blocked.toLocaleString()}
+          </p>
+        </div>
+        <div>
+          <span className="text-[var(--text-tertiary)]">Block Rate</span>
+          <p className="text-[var(--accent-color)] font-medium">
+            {(hoveredCountryStats.blockRate * 100).toFixed(1)}%
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const legendOverlay = (
+    <div className="absolute top-3 right-3 bg-[var(--bg-elevated)]/80 backdrop-blur-sm border border-[var(--border-primary)] rounded-lg px-2.5 py-2 text-[10px]">
+      <p className="font-medium text-[var(--text-secondary)] mb-1.5">Risk Level</p>
+      {[
+        { label: "Critical  ≥ 80%", color: "var(--fraud-critical)" },
+        { label: "High  60–80%", color: "var(--fraud-warning)" },
+        { label: "Medium  40–60%", color: "var(--accent-color)" },
+        { label: "Low  < 40%", color: "var(--fraud-cleared)" },
+      ].map(({ label, color }) => (
+        <div key={label} className="flex items-center gap-1.5 mb-0.5">
+          <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+          <span className="text-[var(--text-tertiary)]">{label}</span>
+        </div>
+      ))}
+    </div>
+  );
+
+  /* ── Immersive fullscreen layout ── */
+  if (fullscreen) {
+    return (
+      <div
+        ref={mapContainerRef}
+        className="flex-1 relative overflow-hidden bg-[var(--bg-secondary)]"
+        style={{ cursor: isPanning ? "grabbing" : "grab" }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+      >
+        <svg
+          viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+          className="absolute inset-0 w-full h-full"
+          preserveAspectRatio="xMidYMid slice"
+          style={{
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+            transformOrigin: "center center",
+          }}
+        >
+          {mapSvgContents()}
+        </svg>
+
+        {/* Overlay stats */}
+        <div className="absolute top-3 left-3 flex gap-2 pointer-events-none">
+          {stats.map((stat) => (
+            <div
+              key={stat.label}
+              className="bg-[var(--bg-elevated)]/80 backdrop-blur-sm border border-[var(--border-primary)] rounded-lg px-2.5 py-1.5"
+            >
+              <p className="text-[10px] text-[var(--text-tertiary)]">{stat.label}</p>
+              <p className="text-sm font-semibold" style={{ color: stat.color }}>
+                {stat.value}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {countryPanel}
+        {legendOverlay}
+
+        {/* Zoom hint */}
+        <div className="absolute bottom-3 right-3 text-[10px] text-[var(--text-tertiary)] bg-[var(--bg-elevated)]/70 backdrop-blur-sm rounded-md px-2 py-1 pointer-events-none">
+          Pinch to zoom · Drag to pan
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Normal (non-fullscreen) layout ── */
   return (
     <div className="space-y-4">
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3">
-        {[
-          {
-            label: "Global Cases",
-            value: totalCases.toLocaleString(),
-            color: "var(--fraud-critical)",
-          },
-          {
-            label: "Blocked",
-            value: totalBlocked.toLocaleString(),
-            color: "var(--fraud-cleared)",
-          },
-          {
-            label: "Block Rate",
-            value: `${((totalBlocked / totalCases) * 100).toFixed(1)}%`,
-            color: "var(--accent-color)",
-          },
-          {
-            label: "Active Regions",
-            value: Object.keys(regionData).length.toString(),
-            color: "var(--fraud-review)",
-          },
-        ].map((stat) => (
+        {stats.map((stat) => (
           <div
             key={stat.label}
             className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] p-3"
@@ -184,270 +539,13 @@ export default function WorldMapView() {
         ))}
       </div>
 
-      {/* Map card */}
+      {/* Map */}
       <div className="relative bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] overflow-hidden">
-        <svg viewBox="0 0 1000 500" className="w-full h-auto block">
-          <defs>
-            {/* Flowing gradient across the whole map */}
-            <linearGradient
-              id="mapFlow"
-              x1="0%"
-              y1="20%"
-              x2="100%"
-              y2="80%"
-            >
-              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.12" />
-              <stop offset="25%" stopColor="#818cf8" stopOpacity="0.16" />
-              <stop offset="50%" stopColor="#f87171" stopOpacity="0.18" />
-              <stop offset="75%" stopColor="#fbbf24" stopOpacity="0.14" />
-              <stop offset="100%" stopColor="#34d399" stopOpacity="0.1" />
-            </linearGradient>
-
-            {/* Per-region radial glows */}
-            {Object.entries(regionData).map(([id, data]) => (
-              <radialGradient
-                key={id}
-                id={`rg-${id}`}
-                cx="50%"
-                cy="50%"
-                r="65%"
-              >
-                <stop
-                  offset="0%"
-                  stopColor={getRiskColor(data.risk)}
-                  stopOpacity="0.45"
-                />
-                <stop
-                  offset="100%"
-                  stopColor={getRiskColor(data.risk)}
-                  stopOpacity="0.06"
-                />
-              </radialGradient>
-            ))}
-
-            <filter id="dotGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="4" result="b" />
-              <feMerge>
-                <feMergeNode in="b" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            <filter
-              id="areaGlow"
-              x="-20%"
-              y="-20%"
-              width="140%"
-              height="140%"
-            >
-              <feGaussianBlur stdDeviation="6" result="b" />
-              <feMerge>
-                <feMergeNode in="b" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          {/* Base gradient wash */}
-          <rect width="1000" height="500" fill="url(#mapFlow)" />
-
-          {/* Graticule grid */}
-          <g opacity="0.18">
-            {Array.from({ length: 10 }, (_, i) => (
-              <line
-                key={`h${i}`}
-                x1="0"
-                y1={(i + 1) * 50}
-                x2="1000"
-                y2={(i + 1) * 50}
-                stroke="var(--border-secondary)"
-                strokeWidth="0.5"
-              />
-            ))}
-            {Array.from({ length: 20 }, (_, i) => (
-              <line
-                key={`v${i}`}
-                x1={(i + 1) * 50}
-                y1="0"
-                x2={(i + 1) * 50}
-                y2="500"
-                stroke="var(--border-secondary)"
-                strokeWidth="0.5"
-              />
-            ))}
-          </g>
-
-          {/* Region fills */}
-          {regions.map((region) => {
-            const parentId = regionParent[region.id];
-            const data = regionData[parentId];
-            if (!data) return null;
-            const active = hovered === parentId;
-
-            return (
-              <path
-                key={region.id}
-                d={region.path}
-                fill={`url(#rg-${parentId})`}
-                stroke={getRiskColor(data.risk)}
-                strokeWidth={active ? 1.8 : 0.8}
-                strokeOpacity={active ? 0.9 : 0.35}
-                fillOpacity={active ? 1 : 0.75}
-                filter={active ? "url(#areaGlow)" : undefined}
-                className="cursor-pointer"
-                style={{ transition: "all 0.3s ease" }}
-                onMouseEnter={() => setHovered(parentId)}
-                onMouseLeave={() => setHovered(null)}
-              />
-            );
-          })}
-
-          {/* Connection arcs */}
-          {connections.map(({ from, to }, i) => {
-            const a = hotspots.find((h) => h.name === from);
-            const b = hotspots.find((h) => h.name === to);
-            if (!a || !b) return null;
-            const mx = (a.x + b.x) / 2;
-            const my = Math.min(a.y, b.y) - 25;
-            return (
-              <path
-                key={i}
-                d={`M ${a.x} ${a.y} Q ${mx} ${my} ${b.x} ${b.y}`}
-                fill="none"
-                stroke="var(--accent-color)"
-                strokeWidth="0.7"
-                strokeOpacity="0.2"
-                strokeDasharray="4 3"
-              />
-            );
-          })}
-
-          {/* Hotspot dots */}
-          {hotspots.map((spot) => {
-            const data = regionData[spot.region];
-            if (!data) return null;
-            const active = hovered === spot.region;
-            const color = getRiskColor(data.risk);
-
-            return (
-              <g key={spot.name}>
-                {/* Animated pulse ring */}
-                <circle
-                  cx={spot.x}
-                  cy={spot.y}
-                  r="5"
-                  fill="none"
-                  stroke={color}
-                  strokeWidth="0.6"
-                >
-                  <animate
-                    attributeName="r"
-                    values="4;14;4"
-                    dur="3.5s"
-                    repeatCount="indefinite"
-                  />
-                  <animate
-                    attributeName="stroke-opacity"
-                    values="0.5;0;0.5"
-                    dur="3.5s"
-                    repeatCount="indefinite"
-                  />
-                </circle>
-
-                {/* Outer soft glow */}
-                <circle
-                  cx={spot.x}
-                  cy={spot.y}
-                  r={active ? 10 : 7}
-                  fill={color}
-                  fillOpacity={0.12}
-                  filter="url(#dotGlow)"
-                  style={{ transition: "r 0.3s ease" }}
-                />
-
-                {/* Core dot */}
-                <circle
-                  cx={spot.x}
-                  cy={spot.y}
-                  r={active ? 3.5 : 2.5}
-                  fill={color}
-                  fillOpacity={0.9}
-                  className="cursor-pointer"
-                  style={{ transition: "r 0.3s ease" }}
-                  onMouseEnter={() => setHovered(spot.region)}
-                  onMouseLeave={() => setHovered(null)}
-                />
-
-                {/* City label on hover */}
-                {active && (
-                  <text
-                    x={spot.x}
-                    y={spot.y - 15}
-                    textAnchor="middle"
-                    fill="var(--text-primary)"
-                    fontSize="9"
-                    fontWeight="600"
-                  >
-                    {spot.name}
-                  </text>
-                )}
-              </g>
-            );
-          })}
+        <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full h-auto block">
+          {mapSvgContents()}
         </svg>
-
-        {/* Tooltip */}
-        {hoveredData && (
-          <div className="absolute bottom-3 left-3 bg-[var(--bg-elevated)] border border-[var(--border-primary)] rounded-xl px-3.5 py-2.5 shadow-lg text-xs pointer-events-none animate-card-in">
-            <p className="font-semibold text-[var(--text-primary)] mb-1">
-              {hoveredData.name}
-            </p>
-            <div className="flex gap-4">
-              <span className="text-[var(--text-tertiary)]">
-                Cases{" "}
-                <span className="text-[var(--fraud-critical)] font-medium">
-                  {hoveredData.cases.toLocaleString()}
-                </span>
-              </span>
-              <span className="text-[var(--text-tertiary)]">
-                Blocked{" "}
-                <span className="text-[var(--fraud-cleared)] font-medium">
-                  {hoveredData.blocked.toLocaleString()}
-                </span>
-              </span>
-              <span className="text-[var(--text-tertiary)]">
-                Risk{" "}
-                <span
-                  className="font-medium"
-                  style={{ color: getRiskColor(hoveredData.risk) }}
-                >
-                  {(hoveredData.risk * 100).toFixed(0)}%
-                </span>
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Legend */}
-        <div className="absolute top-3 right-3 bg-[var(--bg-elevated)]/80 backdrop-blur-sm border border-[var(--border-primary)] rounded-lg px-2.5 py-2 text-[10px]">
-          <p className="font-medium text-[var(--text-secondary)] mb-1.5">
-            Risk Level
-          </p>
-          {[
-            { label: "Critical  ≥ 80%", color: "var(--fraud-critical)" },
-            { label: "High  60–80%", color: "var(--fraud-warning)" },
-            { label: "Medium  40–60%", color: "var(--accent-color)" },
-            { label: "Low  < 40%", color: "var(--fraud-cleared)" },
-          ].map(({ label, color }) => (
-            <div key={label} className="flex items-center gap-1.5 mb-0.5">
-              <span
-                className="w-2 h-2 rounded-full shrink-0"
-                style={{ backgroundColor: color }}
-              />
-              <span className="text-[var(--text-tertiary)]">{label}</span>
-            </div>
-          ))}
-        </div>
+        {countryPanel}
+        {legendOverlay}
       </div>
     </div>
   );
