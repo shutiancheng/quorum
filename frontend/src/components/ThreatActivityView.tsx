@@ -2,8 +2,6 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
-  COUNTRY_FRAUD,
-  TOTAL_ANNUAL_LOSS_M,
   type CountryFraud,
   type SimEvent,
 } from "./WorldMapView";
@@ -62,31 +60,35 @@ function lossBarColor(lossM: number): string {
   return "#4ade80";
 }
 
-/* ═══ Pre-sorted ranking ═══ */
-const RANKED_COUNTRIES = Object.entries(COUNTRY_FRAUD)
-  .map(([id, data]) => ({ id, ...data }))
-  .sort((a, b) => b.lossM - a.lossM);
-
-const MAX_LOSS = RANKED_COUNTRIES[0]?.lossM ?? 1;
-
-/* Weighted picker for sim */
-const WEIGHTED_PICKER: string[] = (() => {
-  const arr: string[] = [];
-  Object.entries(COUNTRY_FRAUD).forEach(([id, d]) => {
-    const w = Math.max(1, Math.ceil(Math.sqrt(d.lossM)));
-    for (let i = 0; i < w; i++) arr.push(id);
-  });
-  return arr;
-})();
+/* Pre-sorted ranking and weighted picker are computed from props inside the component */
 
 /* ═══════════════════════════════════════════
    COMPONENT
    ═══════════════════════════════════════════ */
 export default function ThreatActivityView({
   fullscreen = false,
+  countryFraud,
 }: {
   fullscreen?: boolean;
+  countryFraud: Record<string, CountryFraud>;
 }) {
+  const TOTAL_ANNUAL_LOSS_M = useMemo(
+    () => Math.round(Object.values(countryFraud).reduce((s, c) => s + c.lossM, 0) * 10) / 10,
+    [countryFraud]
+  );
+  const RANKED_COUNTRIES = useMemo(
+    () => Object.entries(countryFraud).map(([id, data]) => ({ id, ...data })).sort((a, b) => b.lossM - a.lossM),
+    [countryFraud]
+  );
+  const MAX_LOSS = RANKED_COUNTRIES[0]?.lossM ?? 1;
+  const WEIGHTED_PICKER = useMemo(() => {
+    const arr: string[] = [];
+    Object.entries(countryFraud).forEach(([id, d]) => {
+      const w = Math.max(1, Math.ceil(Math.sqrt(d.lossM)));
+      for (let i = 0; i < w; i++) arr.push(id);
+    });
+    return arr;
+  }, [countryFraud]);
   /* ── Simulation state ── */
   const [simEvents, setSimEvents] = useState<SimEvent[]>([]);
   const [dailyTotals, setDailyTotals] = useState<Record<string, number>>({});
@@ -111,7 +113,7 @@ export default function ThreatActivityView({
         for (let i = 0; i < n; i++) {
           const cid =
             WEIGHTED_PICKER[Math.floor(Math.random() * WEIGHTED_PICKER.length)];
-          const cd = COUNTRY_FRAUD[cid];
+          const cd = countryFraud[cid];
           const daily = (cd.lossM * 1_000_000) / 365;
           const amount = Math.round(daily * (0.0008 + Math.random() * 0.004));
           const status: SimEvent["status"] =
@@ -154,7 +156,7 @@ export default function ThreatActivityView({
       clearTimeout(startTimer);
       clearInterval(intervalId);
     };
-  }, []);
+  }, [WEIGHTED_PICKER, countryFraud]);
 
   /* Smooth counter */
   useEffect(() => {

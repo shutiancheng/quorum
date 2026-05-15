@@ -28,82 +28,7 @@ export interface CountryFraud {
   ato: number;      // ATO/collusion fraud %
 }
 
-export const COUNTRY_FRAUD: Record<string, CountryFraud> = {
-  /* ── North America ── */
-  "840": { name: "United States",    iso2: "US", lossM: 612,   rate: 0.060, app: 35, unauth: 25, fp: 25, ato: 15 },
-  "124": { name: "Canada",           iso2: "CA", lossM: 42.5,  rate: 0.055, app: 30, unauth: 28, fp: 27, ato: 15 },
-  "484": { name: "Mexico",           iso2: "MX", lossM: 34,    rate: 0.090, app: 22, unauth: 35, fp: 18, ato: 25 },
-  /* ── Europe ── */
-  "826": { name: "United Kingdom",   iso2: "GB", lossM: 136,   rate: 0.110, app: 40, unauth: 20, fp: 25, ato: 15 },
-  "276": { name: "Germany",          iso2: "DE", lossM: 102,   rate: 0.075, app: 25, unauth: 30, fp: 25, ato: 20 },
-  "250": { name: "France",           iso2: "FR", lossM: 68,    rate: 0.080, app: 28, unauth: 27, fp: 28, ato: 17 },
-  "380": { name: "Italy",            iso2: "IT", lossM: 42.5,  rate: 0.085, app: 24, unauth: 30, fp: 26, ato: 20 },
-  "724": { name: "Spain",            iso2: "ES", lossM: 34,    rate: 0.078, app: 26, unauth: 28, fp: 28, ato: 18 },
-  "528": { name: "Netherlands",      iso2: "NL", lossM: 25.5,  rate: 0.065, app: 30, unauth: 25, fp: 30, ato: 15 },
-  "616": { name: "Poland",           iso2: "PL", lossM: 17,    rate: 0.095, app: 20, unauth: 35, fp: 22, ato: 23 },
-  "752": { name: "Sweden",           iso2: "SE", lossM: 12.75, rate: 0.060, app: 32, unauth: 22, fp: 32, ato: 14 },
-  "056": { name: "Belgium",          iso2: "BE", lossM: 8.5,   rate: 0.062, app: 28, unauth: 25, fp: 30, ato: 17 },
-  "756": { name: "Switzerland",      iso2: "CH", lossM: 8.5,   rate: 0.045, app: 30, unauth: 22, fp: 32, ato: 16 },
-  "372": { name: "Ireland",          iso2: "IE", lossM: 8.5,   rate: 0.070, app: 35, unauth: 22, fp: 28, ato: 15 },
-  "040": { name: "Austria",          iso2: "AT", lossM: 8.5,   rate: 0.058, app: 26, unauth: 28, fp: 30, ato: 16 },
-  "578": { name: "Norway",           iso2: "NO", lossM: 6.8,   rate: 0.055, app: 34, unauth: 20, fp: 32, ato: 14 },
-  "208": { name: "Denmark",          iso2: "DK", lossM: 6.8,   rate: 0.052, app: 33, unauth: 21, fp: 32, ato: 14 },
-  "620": { name: "Portugal",         iso2: "PT", lossM: 5.1,   rate: 0.072, app: 24, unauth: 30, fp: 28, ato: 18 },
-  "642": { name: "Romania",          iso2: "RO", lossM: 5.1,   rate: 0.105, app: 18, unauth: 38, fp: 20, ato: 24 },
-  "203": { name: "Czech Republic",   iso2: "CZ", lossM: 5.1,   rate: 0.068, app: 25, unauth: 28, fp: 30, ato: 17 },
-  "300": { name: "Greece",           iso2: "GR", lossM: 3.4,   rate: 0.088, app: 22, unauth: 32, fp: 26, ato: 20 },
-  "348": { name: "Hungary",          iso2: "HU", lossM: 3.4,   rate: 0.092, app: 20, unauth: 34, fp: 24, ato: 22 },
-  "246": { name: "Finland",          iso2: "FI", lossM: 3.4,   rate: 0.048, app: 35, unauth: 18, fp: 34, ato: 13 },
-  /* ── Russia & CIS ── */
-  "643": { name: "Russia",           iso2: "RU", lossM: 25.5,  rate: 0.130, app: 15, unauth: 40, fp: 15, ato: 30 },
-  "804": { name: "Ukraine",          iso2: "UA", lossM: 5.1,   rate: 0.140, app: 12, unauth: 42, fp: 16, ato: 30 },
-  /* ── East Asia ── */
-  "156": { name: "China",            iso2: "CN", lossM: 42.5,  rate: 0.070, app: 18, unauth: 35, fp: 20, ato: 27 },
-  "392": { name: "Japan",            iso2: "JP", lossM: 25.5,  rate: 0.050, app: 22, unauth: 28, fp: 32, ato: 18 },
-  "410": { name: "South Korea",      iso2: "KR", lossM: 17,    rate: 0.055, app: 24, unauth: 26, fp: 30, ato: 20 },
-  /* ── South Asia ── */
-  "356": { name: "India",            iso2: "IN", lossM: 42.5,  rate: 0.120, app: 20, unauth: 32, fp: 22, ato: 26 },
-  "586": { name: "Pakistan",         iso2: "PK", lossM: 5.1,   rate: 0.150, app: 12, unauth: 42, fp: 14, ato: 32 },
-  /* ── Southeast Asia ── */
-  "702": { name: "Singapore",        iso2: "SG", lossM: 17,    rate: 0.075, app: 28, unauth: 24, fp: 28, ato: 20 },
-  "360": { name: "Indonesia",        iso2: "ID", lossM: 17,    rate: 0.130, app: 15, unauth: 38, fp: 18, ato: 29 },
-  "608": { name: "Philippines",      iso2: "PH", lossM: 12.75, rate: 0.125, app: 16, unauth: 36, fp: 20, ato: 28 },
-  "764": { name: "Thailand",         iso2: "TH", lossM: 10.2,  rate: 0.085, app: 20, unauth: 32, fp: 24, ato: 24 },
-  "458": { name: "Malaysia",         iso2: "MY", lossM: 6.8,   rate: 0.080, app: 22, unauth: 30, fp: 26, ato: 22 },
-  "704": { name: "Vietnam",          iso2: "VN", lossM: 6.8,   rate: 0.110, app: 15, unauth: 38, fp: 20, ato: 27 },
-  /* ── Oceania ── */
-  "036": { name: "Australia",        iso2: "AU", lossM: 51,    rate: 0.095, app: 38, unauth: 22, fp: 25, ato: 15 },
-  "554": { name: "New Zealand",      iso2: "NZ", lossM: 3.4,   rate: 0.065, app: 35, unauth: 22, fp: 28, ato: 15 },
-  /* ── Middle East ── */
-  "792": { name: "Turkey",           iso2: "TR", lossM: 17,    rate: 0.100, app: 18, unauth: 35, fp: 22, ato: 25 },
-  "784": { name: "UAE",              iso2: "AE", lossM: 12.75, rate: 0.068, app: 30, unauth: 28, fp: 24, ato: 18 },
-  "376": { name: "Israel",           iso2: "IL", lossM: 8.5,   rate: 0.058, app: 32, unauth: 24, fp: 28, ato: 16 },
-  "682": { name: "Saudi Arabia",     iso2: "SA", lossM: 8.5,   rate: 0.072, app: 25, unauth: 30, fp: 25, ato: 20 },
-  /* ── Africa ── */
-  "566": { name: "Nigeria",          iso2: "NG", lossM: 25.5,  rate: 0.180, app: 12, unauth: 45, fp: 10, ato: 33 },
-  "710": { name: "South Africa",     iso2: "ZA", lossM: 10.2,  rate: 0.115, app: 18, unauth: 35, fp: 20, ato: 27 },
-  "818": { name: "Egypt",            iso2: "EG", lossM: 3.4,   rate: 0.095, app: 15, unauth: 38, fp: 18, ato: 29 },
-  /* ── Latin America ── */
-  "076": { name: "Brazil",           iso2: "BR", lossM: 51,    rate: 0.120, app: 20, unauth: 35, fp: 20, ato: 25 },
-  "032": { name: "Argentina",        iso2: "AR", lossM: 12.75, rate: 0.110, app: 18, unauth: 36, fp: 20, ato: 26 },
-  "170": { name: "Colombia",         iso2: "CO", lossM: 12.75, rate: 0.105, app: 18, unauth: 34, fp: 22, ato: 26 },
-  "152": { name: "Chile",            iso2: "CL", lossM: 5.1,   rate: 0.075, app: 24, unauth: 28, fp: 28, ato: 20 },
-  "604": { name: "Peru",             iso2: "PE", lossM: 3.4,   rate: 0.100, app: 18, unauth: 34, fp: 22, ato: 26 },
-};
-
-export const TOTAL_ANNUAL_LOSS_M = Math.round(
-  Object.values(COUNTRY_FRAUD).reduce((s, c) => s + c.lossM, 0) * 10
-) / 10;
-
-/* Weighted picker for simulation — sqrt(loss) weighting */
-const WEIGHTED_PICKER: string[] = (() => {
-  const arr: string[] = [];
-  Object.entries(COUNTRY_FRAUD).forEach(([id, d]) => {
-    const w = Math.max(1, Math.ceil(Math.sqrt(d.lossM)));
-    for (let i = 0; i < w; i++) arr.push(id);
-  });
-  return arr;
-})();
+/* Data is now fetched from Supabase and passed via props */
 
 /* ═══ Helpers ═══ */
 function isoToFlag(iso2: string): string {
@@ -208,9 +133,29 @@ const HEIGHT = 500;
 /* ═══════════════════════════════════════════
    COMPONENT
    ═══════════════════════════════════════════ */
-export default function WorldMapView({ fullscreen = false }: { fullscreen?: boolean }) {
+export default function WorldMapView({
+  fullscreen = false,
+  countryFraud,
+}: {
+  fullscreen?: boolean;
+  countryFraud: Record<string, CountryFraud>;
+}) {
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
   const [hoveredHotspot, setHoveredHotspot] = useState<string | null>(null);
+
+  /* ── Derived from props ── */
+  const TOTAL_ANNUAL_LOSS_M = useMemo(
+    () => Math.round(Object.values(countryFraud).reduce((s, c) => s + c.lossM, 0) * 10) / 10,
+    [countryFraud]
+  );
+  const weightedPicker = useMemo(() => {
+    const arr: string[] = [];
+    Object.entries(countryFraud).forEach(([id, d]) => {
+      const w = Math.max(1, Math.ceil(Math.sqrt(d.lossM)));
+      for (let i = 0; i < w; i++) arr.push(id);
+    });
+    return arr;
+  }, [countryFraud]);
 
   /* ── Simulation state ── */
   const [simEvents, setSimEvents] = useState<SimEvent[]>([]);
@@ -257,8 +202,8 @@ export default function WorldMapView({ fullscreen = false }: { fullscreen?: bool
         const totalsUpd: Record<string, number> = {};
 
         for (let i = 0; i < n; i++) {
-          const cid = WEIGHTED_PICKER[Math.floor(Math.random() * WEIGHTED_PICKER.length)];
-          const cd = COUNTRY_FRAUD[cid];
+          const cid = weightedPicker[Math.floor(Math.random() * weightedPicker.length)];
+          const cd = countryFraud[cid];
           const daily = (cd.lossM * 1_000_000) / 365;
           const amount = Math.round(daily * (0.0008 + Math.random() * 0.004));
           const status: SimEvent["status"] =
@@ -285,7 +230,7 @@ export default function WorldMapView({ fullscreen = false }: { fullscreen?: bool
     }, 600);
 
     return () => { clearTimeout(startTimer); clearInterval(intervalId); };
-  }, []);
+  }, [weightedPicker, countryFraud]);
 
   /* Smooth counter animation */
   useEffect(() => {
@@ -301,7 +246,7 @@ export default function WorldMapView({ fullscreen = false }: { fullscreen?: bool
   }, []);
 
   /* ── Hover data ── */
-  const hoveredData = hoveredCountry ? COUNTRY_FRAUD[hoveredCountry] ?? null : null;
+  const hoveredData = hoveredCountry ? countryFraud[hoveredCountry] ?? null : null;
 
   /* ── Zoom / pan (fullscreen) ── */
   const [zoom, setZoom] = useState(1);
@@ -407,7 +352,7 @@ export default function WorldMapView({ fullscreen = false }: { fullscreen?: bool
       {/* Country paths */}
       {countries.map((geo, i) => {
         const id = String((geo as any).id ?? i);
-        const data = COUNTRY_FRAUD[id];
+        const data = countryFraud[id];
         const d = pathGen(geo) ?? "";
         const isHovered = hoveredCountry === id;
         const isFlashing = flashId === id;
@@ -477,7 +422,7 @@ export default function WorldMapView({ fullscreen = false }: { fullscreen?: bool
 
       {/* Hotspot dots */}
       {projectedHotspots.map((spot) => {
-        const data = COUNTRY_FRAUD[spot.cid];
+        const data = countryFraud[spot.cid];
         if (!data) return null;
         const active = hoveredHotspot === spot.name || hoveredCountry === spot.cid;
         const color = lossStroke(data.lossM);
@@ -535,7 +480,7 @@ export default function WorldMapView({ fullscreen = false }: { fullscreen?: bool
       <div className="bg-[var(--bg-elevated)]/85 backdrop-blur-sm border border-[var(--border-primary)] rounded-lg px-2.5 py-1.5">
         <p className="text-[9px] text-[var(--text-tertiary)]">Countries Monitored</p>
         <p className="text-sm font-semibold text-[var(--accent-color)]">
-          {Object.keys(COUNTRY_FRAUD).length}
+          {Object.keys(countryFraud).length}
         </p>
       </div>
     </div>
@@ -703,7 +648,7 @@ export default function WorldMapView({ fullscreen = false }: { fullscreen?: bool
         {[
           { label: "Annual Losses (2025)", value: `$${(TOTAL_ANNUAL_LOSS_M / 1000).toFixed(2)}B`, color: "var(--fraud-critical)" },
           { label: "Today\u2019s Losses", value: fmtUSD(displayTotal), color: "var(--fraud-warning)" },
-          { label: "Countries Monitored", value: String(Object.keys(COUNTRY_FRAUD).length), color: "var(--accent-color)" },
+          { label: "Countries Monitored", value: String(Object.keys(countryFraud).length), color: "var(--accent-color)" },
           { label: "Avg Block Rate", value: "82.3%", color: "var(--fraud-cleared)" },
         ].map((s) => (
           <div key={s.label} className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] p-3">

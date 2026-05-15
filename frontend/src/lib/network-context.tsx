@@ -10,7 +10,6 @@ import {
 } from "react";
 import { BloomFilter, hashIdentifier, laplaceMechanism } from "./crypto";
 import {
-  initialParticipants,
   SIGNAL_TYPES,
   PRIVACY_METHODS,
   type Participant,
@@ -36,7 +35,13 @@ export function useNetwork() {
   return ctx;
 }
 
-export function NetworkProvider({ children }: { children: ReactNode }) {
+export function NetworkProvider({
+  children,
+  initialParticipants,
+}: {
+  children: ReactNode;
+  initialParticipants: Participant[];
+}) {
   const [participants, setParticipants] =
     useState<Participant[]>(initialParticipants);
   const [liveSignals, setLiveSignals] = useState<LiveSignal[]>([]);
