@@ -40,7 +40,7 @@ function ReciprocityView() {
     <div className="space-y-4">
       {/* Model + Tiers */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-5">
+        <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-6">
           <h3 className="font-semibold text-[var(--text-primary)] mb-3">
             Reciprocity Model
           </h3>
@@ -68,7 +68,7 @@ function ReciprocityView() {
           </div>
         </div>
 
-        <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-5">
+        <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-6">
           <h3 className="font-semibold text-[var(--text-primary)] mb-3">
             Tier Status
           </h3>
@@ -110,8 +110,8 @@ function ReciprocityView() {
       </div>
 
       {/* Participant Ledger */}
-      <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)]">
-        <div className="px-5 py-4 border-b border-[var(--border-primary)]">
+      <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)]">
+        <div className="px-6 py-4 border-b border-[var(--border-primary)]">
           <h3 className="font-semibold text-[var(--text-primary)]">
             Participant Ledger
           </h3>
@@ -236,7 +236,7 @@ function FrameworkView() {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         {/* Governance Structure */}
-        <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-5">
+        <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-6">
           <h3 className="font-semibold text-[var(--text-primary)] mb-3">
             Governance Structure
           </h3>
@@ -260,7 +260,7 @@ function FrameworkView() {
         </div>
 
         {/* Anti-Weaponisation */}
-        <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-5">
+        <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-6">
           <h3 className="font-semibold text-[var(--text-primary)] mb-3">
             Anti-Weaponisation Safeguards
           </h3>
@@ -278,7 +278,7 @@ function FrameworkView() {
       </div>
 
       {/* Protocol versioning */}
-      <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-5">
+      <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-6">
         <h3 className="font-semibold text-[var(--text-primary)] mb-4">
           Protocol Versioning & Evolution
         </h3>
@@ -352,8 +352,8 @@ function ComplianceView() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)]">
-        <div className="px-5 py-4 border-b border-[var(--border-primary)]">
+      <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)]">
+        <div className="px-6 py-4 border-b border-[var(--border-primary)]">
           <h3 className="font-semibold text-[var(--text-primary)]">
             Jurisdiction Compliance Matrix
           </h3>
@@ -401,7 +401,7 @@ function ComplianceView() {
         {Object.entries(JURISDICTIONS).map(([k, v]) => (
           <div
             key={k}
-            className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-5"
+            className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-6"
             style={{ borderTop: `3px solid ${v.color}` }}
           >
             <div className="text-lg mb-1">

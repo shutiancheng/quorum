@@ -61,13 +61,13 @@ function lossFill(lossM: number, alpha = 0.5): string {
 }
 
 function lossStroke(lossM: number): string {
-  if (lossM >= 200) return "#dc2626";
+  if (lossM >= 200) return "var(--fraud-critical)";
   if (lossM >= 100) return "#ef4444";
   if (lossM >= 50)  return "#f97316";
-  if (lossM >= 20)  return "#f59e0b";
+  if (lossM >= 20)  return "var(--fraud-warning)";
   if (lossM >= 10)  return "#eab308";
   if (lossM >= 5)   return "#84cc16";
-  if (lossM > 0)    return "#4ade80";
+  if (lossM > 0)    return "var(--fraud-cleared)";
   return "var(--border-primary)";
 }
 
@@ -85,11 +85,11 @@ function pickFraudType(d: CountryFraud): FraudLabel {
 
 function fraudColor(t: FraudLabel): string {
   switch (t) {
-    case "APP":       return "#ef4444";
+    case "APP":       return "var(--fraud-critical)";
     case "ATO":       return "#f97316";
-    case "CNP":       return "#eab308";
-    case "1st Party": return "#a855f7";
-    case "BNPL":      return "#3b82f6";
+    case "CNP":       return "var(--fraud-warning)";
+    case "1st Party": return "var(--fraud-review)";
+    case "BNPL":      return "var(--accent-color)";
   }
 }
 
@@ -415,32 +415,40 @@ export default function WorldMapView({
         <animate attributeName="y" from="-10" to={String(HEIGHT + 10)} dur="7s" repeatCount="indefinite" />
       </rect>
 
-      {/* Connection arcs with flowing dashes */}
+      {/* Connection arcs — glowing with flowing dashes */}
       {connections.map(([fromName, toName], i) => {
         const a = projectedHotspots.find((h) => h.name === fromName);
         const b = projectedHotspots.find((h) => h.name === toName);
         if (!a || !b) return null;
         const mx = (a.x + b.x) / 2;
         const my = Math.min(a.y, b.y) - 30;
+        const d = `M ${a.x} ${a.y} Q ${mx} ${my} ${b.x} ${b.y}`;
+        const dur = `${1.8 + (i % 4) * 0.4}s`;
         return (
-          <path
-            key={i}
-            d={`M ${a.x} ${a.y} Q ${mx} ${my} ${b.x} ${b.y}`}
-            fill="none"
-            stroke="var(--accent-color)"
-            strokeWidth="0.8"
-            strokeOpacity="0.25"
-            strokeDasharray="4 6"
-            pointerEvents="none"
-          >
-            <animate
-              attributeName="stroke-dashoffset"
-              from="0"
-              to="-10"
-              dur="2s"
-              repeatCount="indefinite"
+          <g key={i} pointerEvents="none">
+            {/* Wide glow halo */}
+            <path
+              d={d}
+              fill="none"
+              stroke="var(--accent-color)"
+              strokeWidth="4"
+              strokeOpacity="0.08"
+              filter="url(#dotGlow)"
             />
-          </path>
+            {/* Animated dashed core */}
+            <path
+              d={d}
+              fill="none"
+              stroke="var(--accent-color)"
+              strokeWidth="1"
+              strokeOpacity="0.5"
+              strokeDasharray="4 6"
+              filter="url(#dotGlow)"
+            >
+              <animate attributeName="stroke-dashoffset" from="0" to="-10" dur={dur} repeatCount="indefinite" />
+              <animate attributeName="stroke-opacity" values="0.3;0.7;0.3" dur={dur} repeatCount="indefinite" />
+            </path>
+          </g>
         );
       })}
 
@@ -488,8 +496,8 @@ export default function WorldMapView({
   const liveStats = (
     <div className="absolute top-3 left-3 flex items-center gap-2 pointer-events-none">
       <div className="flex items-center gap-1.5 bg-[var(--bg-elevated)]/85 backdrop-blur-sm border border-[var(--border-primary)] rounded-lg px-2.5 py-1.5">
-        <span className="w-2 h-2 rounded-full bg-red-500 animate-alert-pulse shrink-0" />
-        <span className="text-[10px] font-semibold text-red-400">LIVE</span>
+        <span className="w-2 h-2 rounded-full bg-[var(--fraud-critical)] animate-alert-pulse shrink-0" />
+        <span className="text-[10px] font-semibold text-[var(--fraud-critical)]">LIVE</span>
       </div>
       <div className="bg-[var(--bg-elevated)]/85 backdrop-blur-sm border border-[var(--border-primary)] rounded-lg px-2.5 py-1.5">
         <p className="text-[9px] text-[var(--text-tertiary)]">Projected Losses (2026)</p>
@@ -514,13 +522,13 @@ export default function WorldMapView({
     <div className="absolute top-14 right-3 bg-[var(--bg-elevated)]/80 backdrop-blur-sm border border-[var(--border-primary)] rounded-lg px-2.5 py-2 text-[10px]">
       <p className="font-medium text-[var(--text-secondary)] mb-1.5">Annual Fraud Loss</p>
       {[
-        { label: "\u2265 $200M",   color: "#dc2626" },
+        { label: "\u2265 $200M",   color: "var(--fraud-critical)" },
         { label: "$100\u2013200M", color: "#ef4444" },
         { label: "$50\u2013100M",  color: "#f97316" },
-        { label: "$20\u201350M",   color: "#f59e0b" },
+        { label: "$20\u201350M",   color: "var(--fraud-warning)" },
         { label: "$10\u201320M",   color: "#eab308" },
         { label: "$5\u201310M",    color: "#84cc16" },
-        { label: "< $5M",          color: "#4ade80" },
+        { label: "< $5M",          color: "var(--fraud-cleared)" },
       ].map(({ label, color }) => (
         <div key={label} className="flex items-center gap-1.5 mb-0.5">
           <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
@@ -570,10 +578,10 @@ export default function WorldMapView({
       </p>
       <div className="space-y-1">
         {([
-          { label: "APP",          pct: hoveredData.app,    color: "#ef4444" },
+          { label: "APP",          pct: hoveredData.app,    color: "var(--fraud-critical)" },
           { label: "Unauthorized", pct: hoveredData.unauth, color: "#f97316" },
-          { label: "First Party",  pct: hoveredData.fp,     color: "#a855f7" },
-          { label: "ATO",          pct: hoveredData.ato,    color: "#3b82f6" },
+          { label: "First Party",  pct: hoveredData.fp,     color: "var(--fraud-review)" },
+          { label: "ATO",          pct: hoveredData.ato,    color: "var(--accent-color)" },
         ] as const).map(({ label, pct, color }) => (
           <div key={label} className="flex items-center gap-2">
             <span className="text-[var(--text-tertiary)] w-[60px] text-[10px]">{label}</span>
@@ -597,7 +605,7 @@ export default function WorldMapView({
   const activityFeed = (
     <div className="absolute bottom-3 right-3 bg-[var(--bg-elevated)]/85 backdrop-blur-sm border border-[var(--border-primary)] rounded-xl p-2.5 w-[255px] pointer-events-none">
       <div className="flex items-center gap-1.5 mb-1.5">
-        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shrink-0" />
+        <span className="w-1.5 h-1.5 rounded-full bg-[var(--fraud-critical)] animate-alert-pulse shrink-0" />
         <span className="text-[10px] font-medium text-[var(--text-secondary)]">Live Activity</span>
       </div>
       <div className="space-y-0.5">
@@ -616,10 +624,10 @@ export default function WorldMapView({
             <span
               className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                 ev.status === "blocked"
-                  ? "bg-green-500"
+                  ? "bg-[var(--fraud-cleared)]"
                   : ev.status === "flagged"
-                  ? "bg-amber-400"
-                  : "bg-red-500"
+                  ? "bg-[var(--fraud-warning)]"
+                  : "bg-[var(--fraud-critical)]"
               }`}
             />
           </div>
@@ -682,13 +690,13 @@ export default function WorldMapView({
         ))}
       </div>
 
-      <div className="relative bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] overflow-hidden">
+      <div className="relative bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] overflow-hidden">
         <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full h-auto block">
           {mapSvg()}
         </svg>
         <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-[var(--bg-elevated)]/85 backdrop-blur-sm border border-[var(--border-primary)] rounded-lg px-2.5 py-1.5 pointer-events-none">
-          <span className="w-2 h-2 rounded-full bg-red-500 animate-alert-pulse shrink-0" />
-          <span className="text-[10px] font-semibold text-red-400">LIVE</span>
+          <span className="w-2 h-2 rounded-full bg-[var(--fraud-critical)] animate-alert-pulse shrink-0" />
+          <span className="text-[10px] font-semibold text-[var(--fraud-critical)]">LIVE</span>
         </div>
         {countryPanel}
         {legendPanel}

@@ -64,7 +64,7 @@ function ArchitectureView() {
     <div className="space-y-4">
       {/* System design + Privacy architecture */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-5">
+        <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-6">
           <h3 className="font-semibold text-[var(--text-primary)] mb-3">
             System Design
           </h3>
@@ -93,7 +93,7 @@ function ArchitectureView() {
           </div>
         </div>
 
-        <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-5">
+        <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-6">
           <h3 className="font-semibold text-[var(--text-primary)] mb-3">
             Privacy Architecture
           </h3>
@@ -141,7 +141,7 @@ function ArchitectureView() {
       </div>
 
       {/* Network topology */}
-      <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-5">
+      <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-6">
         <h3 className="font-semibold text-[var(--text-primary)] mb-4">
           Network Topology
         </h3>
@@ -260,7 +260,7 @@ function ArchitectureView() {
         ].map((card) => (
           <div
             key={card.title}
-            className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-5"
+            className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-6"
           >
             <h3 className="font-semibold text-[var(--text-primary)] mb-2 text-sm">
               {card.title}
@@ -302,7 +302,7 @@ function LiveFeedView({
         ].map((stat) => (
           <div
             key={stat.label}
-            className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-5 animate-card-in"
+            className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-6 animate-card-in"
           >
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-xl bg-[var(--bg-tertiary)] flex items-center justify-center">
@@ -318,8 +318,8 @@ function LiveFeedView({
       </div>
 
       {/* Live table */}
-      <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)]">
-        <div className="px-5 py-4 border-b border-[var(--border-primary)] flex items-center gap-2">
+      <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)]">
+        <div className="px-6 py-4 border-b border-[var(--border-primary)] flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-[var(--fraud-cleared)] animate-alert-pulse" />
           <h3 className="font-semibold text-[var(--text-primary)]">
             Live Signal Feed

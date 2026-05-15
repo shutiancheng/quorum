@@ -249,7 +249,7 @@ export default function LiveDemoPage() {
       </div>
 
       {/* Scenario context */}
-      <div className="bg-[var(--bg-tertiary)] rounded-2xl border border-[var(--border-primary)] px-5 py-3 text-sm text-[var(--text-secondary)]">
+      <div className="bg-[var(--bg-tertiary)] rounded-xl border border-[var(--border-primary)] px-5 py-3 text-sm text-[var(--text-secondary)]">
         <span className="font-semibold text-[var(--text-primary)]">Scenario: </span>
         A fraudster opens a PayPal account using a SIM-swapped UK phone number also linked to scam accounts on Telegram and Instagram.
         Funds are routed through a UK money mule to a Brazilian IBAN connected to an INTERPOL-tracked network.
@@ -259,7 +259,7 @@ export default function LiveDemoPage() {
       {/* Network + Timeline */}
       <div className="grid grid-cols-2 gap-4">
         {/* Network SVG */}
-        <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-5">
+        <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-6">
           <h3 className="font-semibold text-[var(--text-primary)] text-sm mb-1">Signal Network</h3>
           <p className="text-xs text-[var(--text-tertiary)] mb-3">
             Actors exchange privacy-preserving signal hashes through the GSE coordination hub
@@ -268,8 +268,8 @@ export default function LiveDemoPage() {
         </div>
 
         {/* Signal Timeline */}
-        <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] flex flex-col">
-          <div className="px-5 py-4 border-b border-[var(--border-primary)] flex items-center gap-2 shrink-0">
+        <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] flex flex-col">
+          <div className="px-6 py-4 border-b border-[var(--border-primary)] flex items-center gap-2 shrink-0">
             {playing && (
               <div className="w-2 h-2 rounded-full bg-[var(--fraud-cleared)] animate-alert-pulse" />
             )}
@@ -351,8 +351,8 @@ export default function LiveDemoPage() {
 
       {/* Quorum Matrix */}
       {matrixVisible.length > 0 && (
-        <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] animate-card-in">
-          <div className="px-5 py-4 border-b border-[var(--border-primary)]">
+        <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] animate-card-in">
+          <div className="px-6 py-4 border-b border-[var(--border-primary)]">
             <h3 className="font-semibold text-[var(--text-primary)]">Universal Quorum Matrix</h3>
             <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
               WEIGHTED_SCORE = Σ (Nᵢ × Wᵢ) &nbsp;·&nbsp; Nᵢ = normalised fraud signal from source i &nbsp;·&nbsp; Wᵢ = policy-defined weight
@@ -475,7 +475,7 @@ export default function LiveDemoPage() {
 
       {/* Verdict callout */}
       {hasVerdict && (
-        <div className="bg-[var(--fraud-critical-bg)] rounded-2xl border border-[var(--fraud-critical)] p-5 animate-card-in">
+        <div className="bg-[var(--fraud-critical-bg)] rounded-xl border border-[var(--fraud-critical)] p-6 animate-card-in">
           <div className="flex items-start gap-3">
             <AlertTriangle
               className="w-5 h-5 text-[var(--fraud-critical)] shrink-0 mt-0.5"
@@ -521,41 +521,74 @@ function NetworkSVG({ activeActors }: { activeActors: Set<ActorId> }) {
   return (
     <svg viewBox="0 0 700 370" className="w-full">
       <defs>
+        <filter id="lineGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
         <style>{`
           @keyframes actorPulse {
             0%, 100% { opacity: 0.15; }
             50% { opacity: 0.55; }
           }
-          @keyframes lineFlow {
-            0%, 100% { opacity: 0.2; }
-            50% { opacity: 0.75; }
+          @keyframes lineGlowAnim {
+            0%, 100% { opacity: 0.35; }
+            50%       { opacity: 1; }
           }
           @keyframes gsePulse {
             0%, 100% { opacity: 0.1; }
             50% { opacity: 0.35; }
           }
           .pulse-ring { animation: actorPulse 1s ease-in-out infinite; }
-          .flow-line  { animation: lineFlow 0.85s ease-in-out infinite; }
+          .flow-line  { animation: lineGlowAnim 0.85s ease-in-out infinite; }
           .gse-ring   { animation: gsePulse 1.1s ease-in-out infinite; }
         `}</style>
       </defs>
 
-      {/* Lines from outer actors to GSE */}
+      {/* Inactive base lines */}
       {outerActors.map(([id, actor]) => {
         const isActive = activeActors.has(id) || activeActors.has("gse");
+        if (isActive) return null;
         return (
           <line
-            key={`line-${id}`}
-            x1={actor.cx}
-            y1={actor.cy}
-            x2={gse.cx}
-            y2={gse.cy}
-            stroke={isActive ? actor.color : "var(--border-secondary, #334155)"}
-            strokeWidth={isActive ? 1.5 : 0.75}
-            strokeDasharray={isActive ? undefined : "4 5"}
-            opacity={isActive ? 0.5 : 0.2}
-            className={isActive ? "flow-line" : undefined}
+            key={`line-inactive-${id}`}
+            x1={actor.cx} y1={actor.cy}
+            x2={gse.cx}   y2={gse.cy}
+            stroke="rgba(255,255,255,0.08)"
+            strokeWidth={0.75}
+            strokeDasharray="4 5"
           />
+        );
+      })}
+
+      {/* Active glowing lines — rendered last so glow sits on top */}
+      {outerActors.map(([id, actor]) => {
+        const isActive = activeActors.has(id) || activeActors.has("gse");
+        if (!isActive) return null;
+        return (
+          <g key={`line-${id}`}>
+            {/* Wide soft glow layer */}
+            <line
+              x1={actor.cx} y1={actor.cy}
+              x2={gse.cx}   y2={gse.cy}
+              stroke={actor.color}
+              strokeWidth={6}
+              opacity={0.18}
+              filter="url(#lineGlow)"
+            />
+            {/* Sharp bright core */}
+            <line
+              x1={actor.cx} y1={actor.cy}
+              x2={gse.cx}   y2={gse.cy}
+              stroke={actor.color}
+              strokeWidth={1.5}
+              className="flow-line"
+              filter="url(#lineGlow)"
+            />
+          </g>
         );
       })}
 
@@ -578,7 +611,7 @@ function NetworkSVG({ activeActors }: { activeActors: Set<ActorId> }) {
               cx={actor.cx}
               cy={actor.cy}
               r={17}
-              fill={isActive ? actor.color : "var(--bg-secondary, #1e293b)"}
+              fill={isActive ? actor.color : "var(--bg-secondary)"}
               stroke={actor.color}
               strokeWidth={isActive ? 2 : 1}
               strokeOpacity={isActive ? 1 : 0.5}
@@ -601,7 +634,7 @@ function NetworkSVG({ activeActors }: { activeActors: Set<ActorId> }) {
               textAnchor="middle"
               fontSize="8"
               fontFamily="monospace"
-              fill={isActive ? actor.color : "var(--text-tertiary, #94a3b8)"}
+              fill={isActive ? actor.color : "var(--text-tertiary)"}
               fontWeight={isActive ? "600" : "400"}
             >
               {actor.name}
@@ -612,7 +645,7 @@ function NetworkSVG({ activeActors }: { activeActors: Set<ActorId> }) {
               textAnchor="middle"
               fontSize="7"
               fontFamily="monospace"
-              fill="var(--text-tertiary, #64748b)"
+              fill="var(--text-tertiary)"
               opacity="0.6"
             >
               {actor.jurisdiction}
@@ -640,7 +673,7 @@ function NetworkSVG({ activeActors }: { activeActors: Set<ActorId> }) {
               cx={gse.cx}
               cy={gse.cy}
               r={24}
-              fill={isActive ? gse.color : "var(--bg-secondary, #1e293b)"}
+              fill={isActive ? gse.color : "var(--bg-secondary)"}
               stroke={gse.color}
               strokeWidth={isActive ? 2.5 : 1.5}
               strokeOpacity={0.9}
@@ -674,7 +707,7 @@ function NetworkSVG({ activeActors }: { activeActors: Set<ActorId> }) {
               textAnchor="middle"
               fontSize="7"
               fontFamily="monospace"
-              fill="var(--text-tertiary, #64748b)"
+              fill="var(--text-tertiary)"
               opacity="0.7"
             >
               GLOBAL · No PII

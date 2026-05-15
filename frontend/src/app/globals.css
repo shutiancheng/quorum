@@ -1,111 +1,65 @@
 @import "tailwindcss";
 
-/* ── Design Tokens ── */
+/* ── Design Tokens — Dark-only palette ── */
 :root {
   /* Brand */
-  --brand-primary: #171717;
-  --brand-primary-hover: #262626;
-  --brand-primary-fg: #ffffff;
+  --brand-primary: #E5FF8F;
+  --brand-primary-hover: #EDFFB1;
+  --brand-primary-fg: #000000;
 
-  /* Accent — muted steel blue for fraud/security feel */
-  --accent-color: #7884a7;
-  --accent-hover: #6b7a9e;
+  /* Accent */
+  --accent-color: #00D0FF;
+  --accent-hover: #00B8E0;
 
-  /* Backgrounds — warm neutrals */
-  --bg-primary: #ffffff;
-  --bg-secondary: #fafafa;
-  --bg-tertiary: #f5f5f4;
-  --bg-elevated: #ffffff;
+  /* Backgrounds */
+  --bg-primary: #111111;
+  --bg-secondary: #000000;
+  --bg-tertiary: #181818;
+  --bg-elevated: #1A1A1A;
 
-  /* Text — softer contrast */
-  --text-primary: #1c1917;
-  --text-secondary: #57534e;
-  --text-tertiary: #a8a29e;
+  /* Text */
+  --text-primary: #FFFFFF;
+  --text-secondary: #9A9A9A;
+  --text-tertiary: #555555;
 
-  /* Borders — warm grays */
-  --border-primary: #e7e5e4;
-  --border-secondary: #d6d3d1;
+  /* Borders — near-invisible, contrast comes from bg diff + shadow */
+  --border-primary: rgba(255, 255, 255, 0.05);
+  --border-secondary: rgba(255, 255, 255, 0.08);
 
   /* Buttons */
-  --btn-bg: #171717;
-  --btn-fg: #ffffff;
+  --btn-bg: #E5FF8F;
+  --btn-fg: #000000;
 
   /* Toggle */
-  --toggle-track: #d6d3d1;
-  --toggle-active: #22c55e;
+  --toggle-track: #2A2A2A;
+  --toggle-active: #E5FF8F;
 
   /* Sidebar */
-  --sidebar-bg: #f5f5f4;
-  --sidebar-border: #e7e5e4;
-  --sidebar-item-hover: rgba(0, 0, 0, 0.04);
-  --sidebar-item-active: rgba(0, 0, 0, 0.06);
-  --sidebar-item-active-text: #1c1917;
+  --sidebar-bg: #0A0A0A;
+  --sidebar-border: rgba(255, 255, 255, 0.05);
+  --sidebar-item-hover: rgba(255, 255, 255, 0.04);
+  --sidebar-item-active: rgba(229, 255, 143, 0.10);
+  --sidebar-item-active-text: #E5FF8F;
 
   /* Pills / Tags */
-  --pill-active-bg: #171717;
-  --pill-active-text: #ffffff;
+  --pill-active-bg: #E5FF8F;
+  --pill-active-text: #000000;
 
-  /* Cards */
-  --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
-  --card-shadow-hover: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-  --card-radius: 16px;
-  --card-radius-sm: 12px;
+  /* Cards — contrast via bg + shadow, no hard border */
+  --card-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 4px 20px rgba(0,0,0,0.6);
+  --card-shadow-hover: 0 0 0 1px rgba(255,255,255,0.06), 0 8px 32px rgba(0,0,0,0.7);
+  --card-radius: 12px;
+  --card-radius-sm: 8px;
 
   /* Semantic — fraud-specific */
-  --fraud-critical: #dc2626;
-  --fraud-critical-bg: #fef2f2;
-  --fraud-warning: #f59e0b;
-  --fraud-warning-bg: #fffbeb;
-  --fraud-cleared: #16a34a;
-  --fraud-cleared-bg: #f0fdf4;
-  --fraud-review: #6366f1;
-  --fraud-review-bg: #eef2ff;
-}
-
-/* ── Dark Theme ── */
-[data-theme="dark"] {
-  --brand-primary: #fafafa;
-  --brand-primary-hover: #e5e5e5;
-  --brand-primary-fg: #171717;
-
-  --bg-primary: #141414;
-  --bg-secondary: #000000;
-  --bg-tertiary: #1e1e1e;
-  --bg-elevated: #141414;
-
-  --text-primary: #fafaf9;
-  --text-secondary: #a8a29e;
-  --text-tertiary: #78716c;
-
-  --border-primary: #1e1e1e;
-  --border-secondary: #2a2a2a;
-
-  --btn-bg: #27272a;
-  --btn-fg: #ffffff;
-
-  --toggle-track: #404040;
-
-  --sidebar-bg: #111111;
-  --sidebar-border: #232323;
-  --sidebar-item-hover: rgba(255, 255, 255, 0.05);
-  --sidebar-item-active: rgba(255, 255, 255, 0.08);
-  --sidebar-item-active-text: #fafafa;
-
-  --pill-active-bg: #fafafa;
-  --pill-active-text: #0a0a0a;
-
-  --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
-  --card-shadow-hover: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
-
-  /* Semantic — fraud (darker bg variants) */
-  --fraud-critical: #ef4444;
-  --fraud-critical-bg: #1c1111;
-  --fraud-warning: #fbbf24;
-  --fraud-warning-bg: #1c1a0e;
-  --fraud-cleared: #22c55e;
-  --fraud-cleared-bg: #0e1c14;
-  --fraud-review: #818cf8;
-  --fraud-review-bg: #121320;
+  --fraud-critical: #FF3333;
+  --fraud-critical-bg: rgba(255, 51, 51, 0.10);
+  --fraud-warning: #FFA500;
+  --fraud-warning-bg: rgba(255, 165, 0, 0.10);
+  --fraud-cleared: #00FF41;
+  --fraud-cleared-bg: rgba(0, 255, 65, 0.10);
+  --fraud-review: #00D0FF;
+  --fraud-review-bg: rgba(0, 208, 255, 0.10);
 }
 
 /* ── Global Base Styles ── */
@@ -121,8 +75,8 @@ html, body {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-secondary); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
 /* Card hover */
 .card-hover {
@@ -135,21 +89,18 @@ html, body {
 
 /* ── Animations ── */
 
-/* Shimmer loading skeleton */
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
 .animate-shimmer { animation: shimmer 2.5s ease-in-out infinite; }
 
-/* Card reveal */
 @keyframes card-in {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 .animate-card-in { animation: card-in 0.35s ease-out both; }
 
-/* Dropdown menu */
 @keyframes dropdown-in {
   0% { opacity: 0; transform: scale(0.95) translateY(-4px); }
   100% { opacity: 1; transform: scale(1) translateY(0); }
@@ -159,9 +110,15 @@ html, body {
   transform-origin: top right;
 }
 
-/* Pulse for live alerts */
 @keyframes alert-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
-  50% { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 51, 51, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(255, 51, 51, 0); }
 }
 .animate-alert-pulse { animation: alert-pulse 1.5s ease-in-out infinite; }
+
+/* Glowing line animation for network diagrams */
+@keyframes line-glow {
+  0%, 100% { opacity: 0.4; filter: drop-shadow(0 0 2px currentColor); }
+  50%       { opacity: 0.9; filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 12px currentColor); }
+}
+.line-glow { animation: line-glow 1.2s ease-in-out infinite; }

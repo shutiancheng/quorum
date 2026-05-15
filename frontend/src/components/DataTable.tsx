@@ -10,7 +10,7 @@ export default function DataTable({ cases }: DataTableProps) {
   if (cases.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-[var(--bg-tertiary)] flex items-center justify-center mb-4">
+        <div className="w-12 h-12 rounded-xl bg-[var(--bg-tertiary)] flex items-center justify-center mb-4">
           <svg
             className="w-6 h-6 text-[var(--text-tertiary)] shrink-0"
             fill="none"

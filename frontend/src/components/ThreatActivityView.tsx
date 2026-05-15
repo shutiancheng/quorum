@@ -2,6 +2,8 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
+  COUNTRY_FRAUD,
+  TOTAL_ANNUAL_LOSS_M,
   type CountryFraud,
   type SimEvent,
 } from "./WorldMapView";
@@ -42,11 +44,11 @@ function pickFraudType(d: CountryFraud): FraudLabel {
 
 function fraudColor(t: FraudLabel): string {
   switch (t) {
-    case "APP":       return "#ef4444";
+    case "APP":       return "var(--fraud-critical)";
     case "ATO":       return "#f97316";
-    case "CNP":       return "#eab308";
-    case "1st Party": return "#a855f7";
-    case "BNPL":      return "#3b82f6";
+    case "CNP":       return "var(--fraud-warning)";
+    case "1st Party": return "var(--fraud-review)";
+    case "BNPL":      return "var(--accent-color)";
   }
 }
 
@@ -60,71 +62,40 @@ function lossBarColor(lossM: number): string {
   return "#4ade80";
 }
 
-/* 8% YoY growth — 2025 baseline data → 2026 projection */
-const YOY_GROWTH = 1.08;
+/* ═══ Pre-sorted ranking ═══ */
+const RANKED_COUNTRIES = Object.entries(COUNTRY_FRAUD)
+  .map(([id, data]) => ({ id, ...data }))
+  .sort((a, b) => b.lossM - a.lossM);
+
+const MAX_LOSS = RANKED_COUNTRIES[0]?.lossM ?? 1;
+
+/* Weighted picker for sim */
+const WEIGHTED_PICKER: string[] = (() => {
+  const arr: string[] = [];
+  Object.entries(COUNTRY_FRAUD).forEach(([id, d]) => {
+    const w = Math.max(1, Math.ceil(Math.sqrt(d.lossM)));
+    for (let i = 0; i < w; i++) arr.push(id);
+  });
+  return arr;
+})();
 
 /* ═══════════════════════════════════════════
    COMPONENT
    ═══════════════════════════════════════════ */
 export default function ThreatActivityView({
   fullscreen = false,
-  countryFraud,
 }: {
   fullscreen?: boolean;
-  countryFraud: Record<string, CountryFraud>;
 }) {
-  const TOTAL_ANNUAL_LOSS_M = useMemo(
-    () => Math.round(Object.values(countryFraud).reduce((s, c) => s + c.lossM, 0) * 10) / 10,
-    [countryFraud]
-  );
-  const RANKED_COUNTRIES = useMemo(
-    () => Object.entries(countryFraud).map(([id, data]) => ({ id, ...data })).sort((a, b) => b.lossM - a.lossM),
-    [countryFraud]
-  );
-  const MAX_LOSS = RANKED_COUNTRIES[0]?.lossM ?? 1;
-  const WEIGHTED_PICKER = useMemo(() => {
-    const arr: string[] = [];
-    Object.entries(countryFraud).forEach(([id, d]) => {
-      const w = Math.max(1, Math.ceil(Math.sqrt(d.lossM)));
-      for (let i = 0; i < w; i++) arr.push(id);
-    });
-    return arr;
-  }, [countryFraud]);
-
-  /* Pro-rata seeding based on UK BST time of day (computed once on mount) */
-  const proRata = useMemo(() => {
-    const now = new Date();
-    const londonStr = now.toLocaleString("en-US", { timeZone: "Europe/London" });
-    const london = new Date(londonStr);
-    const dayFraction = (london.getHours() * 60 + london.getMinutes()) / (24 * 60);
-
-    let total = 0;
-    const perCountry: Record<string, number> = {};
-    Object.entries(countryFraud).forEach(([id, d]) => {
-      const countryDailyAvg = (d.lossM * YOY_GROWTH * 1_000_000) / 365;
-      const countryToday = Math.round(countryDailyAvg * dayFraction);
-      perCountry[id] = countryToday;
-      total += countryToday;
-    });
-
-    // Sim fires ~1.5 events / 2.2s → ~59k events/day
-    const eventsPerDay = Math.round((86400 / 2.2) * 1.5);
-    const events = Math.round(eventsPerDay * dayFraction);
-    const blocked = Math.round(events * 0.82);
-
-    return { total, perCountry, events, blocked };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   /* ── Simulation state ── */
   const [simEvents, setSimEvents] = useState<SimEvent[]>([]);
-  const [dailyTotals, setDailyTotals] = useState<Record<string, number>>(proRata.perCountry);
-  const [totalToday, setTotalToday] = useState(proRata.total);
-  const [eventsCount, setEventsCount] = useState(proRata.events);
-  const [blockedCount, setBlockedCount] = useState(proRata.blocked);
+  const [dailyTotals, setDailyTotals] = useState<Record<string, number>>({});
+  const [totalToday, setTotalToday] = useState(0);
+  const [eventsCount, setEventsCount] = useState(0);
+  const [blockedCount, setBlockedCount] = useState(0);
   const eventIdRef = useRef(0);
-  const targetTotalRef = useRef(proRata.total);
-  const [displayTotal, setDisplayTotal] = useState(proRata.total);
+  const targetTotalRef = useRef(0);
+  const [displayTotal, setDisplayTotal] = useState(0);
 
   /* ── Simulation interval ── */
   useEffect(() => {
@@ -140,8 +111,8 @@ export default function ThreatActivityView({
         for (let i = 0; i < n; i++) {
           const cid =
             WEIGHTED_PICKER[Math.floor(Math.random() * WEIGHTED_PICKER.length)];
-          const cd = countryFraud[cid];
-          const daily = (cd.lossM * YOY_GROWTH * 1_000_000) / 365;
+          const cd = COUNTRY_FRAUD[cid];
+          const daily = (cd.lossM * 1_000_000) / 365;
           const amount = Math.round(daily * (0.0008 + Math.random() * 0.004));
           const status: SimEvent["status"] =
             Math.random() > 0.18
@@ -183,7 +154,7 @@ export default function ThreatActivityView({
       clearTimeout(startTimer);
       clearInterval(intervalId);
     };
-  }, [WEIGHTED_PICKER, countryFraud]);
+  }, []);
 
   /* Smooth counter */
   useEffect(() => {
@@ -205,38 +176,22 @@ export default function ThreatActivityView({
 
   return (
     <div className={`space-y-4 ${fullscreen ? "p-0" : ""}`}>
-      {/* ── Summary stats ── */}
-      <div className="grid grid-cols-4 gap-3">
+      {/* ── Summary stats — lime hero cards ── */}
+      <div className="grid grid-cols-4 gap-4">
         {[
-          {
-            label: "Projected Losses (2026)",
-            value: `$${(TOTAL_ANNUAL_LOSS_M * YOY_GROWTH / 1000).toFixed(2)}B`,
-            color: "var(--fraud-critical)",
-          },
-          {
-            label: "Today\u2019s Losses",
-            value: `$${Math.round(displayTotal).toLocaleString()}`,
-            color: "var(--fraud-warning)",
-          },
-          {
-            label: "Events Detected",
-            value: eventsCount.toLocaleString(),
-            color: "var(--fraud-review)",
-          },
-          {
-            label: "Block Rate",
-            value: `${blockRate}%`,
-            color: "var(--fraud-cleared)",
-          },
+          { label: "Annual Losses (2025)", value: `$${(TOTAL_ANNUAL_LOSS_M / 1000).toFixed(2)}B`, sub: "Est. 2025 global losses" },
+          { label: "Today\u2019s Losses",  value: fmtUSD(displayTotal),                            sub: "Simulated live feed"   },
+          { label: "Countries Monitored",  value: String(Object.keys(COUNTRY_FRAUD).length),         sub: "Active jurisdictions"  },
+          { label: "Avg Block Rate",        value: `${blockRate}%`,                                  sub: "Blocked vs detected"   },
         ].map((s) => (
           <div
             key={s.label}
-            className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] p-3"
+            className="rounded-xl p-6 flex flex-col gap-2 animate-card-in"
+            style={{ backgroundColor: "var(--brand-primary)" }}
           >
-            <p className="text-xs text-[var(--text-tertiary)]">{s.label}</p>
-            <p className="text-lg font-semibold mt-0.5" style={{ color: s.color }}>
-              {s.value}
-            </p>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-black/50">{s.label}</span>
+            <div className="text-[2rem] font-bold text-black tracking-tight leading-none">{s.value}</div>
+            <div className="text-xs text-black/40 font-medium">{s.sub}</div>
           </div>
         ))}
       </div>
@@ -244,10 +199,10 @@ export default function ThreatActivityView({
       {/* ── Main content: rankings + feed ── */}
       <div className="grid grid-cols-5 gap-4">
         {/* Rankings (3 cols) */}
-        <div className="col-span-3 bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] overflow-hidden">
+        <div className="col-span-3 bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] overflow-hidden">
           <div className="px-4 py-3 border-b border-[var(--border-primary)] flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-alert-pulse shrink-0" />
+              <span className="w-2 h-2 rounded-full bg-[var(--fraud-critical)] animate-alert-pulse shrink-0" />
               <h3 className="font-semibold text-[var(--text-primary)] text-sm">
                 Countries by Fraud Loss
               </h3>
@@ -289,7 +244,7 @@ export default function ThreatActivityView({
                     className="text-right font-semibold"
                     style={{ color: lossBarColor(c.lossM) }}
                   >
-                    ${(c.lossM * YOY_GROWTH).toFixed(1)}M
+                    ${c.lossM.toFixed(1)}M
                   </span>
                   <span className="text-right font-medium text-[var(--fraud-warning)]">
                     {todayLoss > 0 ? fmtUSD(todayLoss) : "\u2014"}
@@ -313,9 +268,9 @@ export default function ThreatActivityView({
         </div>
 
         {/* Live feed (2 cols) */}
-        <div className="col-span-2 bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] overflow-hidden flex flex-col">
+        <div className="col-span-2 bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] overflow-hidden flex flex-col">
           <div className="px-4 py-3 border-b border-[var(--border-primary)] flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shrink-0" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--fraud-critical)] animate-alert-pulse shrink-0" />
             <h3 className="font-semibold text-[var(--text-primary)] text-sm">
               Live Threat Feed
             </h3>
@@ -325,11 +280,11 @@ export default function ThreatActivityView({
           <div className="px-4 py-2 border-b border-[var(--border-primary)] flex items-center gap-3 flex-wrap">
             {(
               [
-                ["APP", "#ef4444"],
+                ["APP", "var(--fraud-critical)"],
                 ["ATO", "#f97316"],
-                ["CNP", "#eab308"],
-                ["1st Party", "#a855f7"],
-                ["BNPL", "#3b82f6"],
+                ["CNP", "var(--fraud-warning)"],
+                ["1st Party", "var(--fraud-review)"],
+                ["BNPL", "var(--accent-color)"],
               ] as const
             ).map(([label, color]) => (
               <div key={label} className="flex items-center gap-1">
@@ -342,15 +297,15 @@ export default function ThreatActivityView({
             ))}
             <div className="ml-auto flex items-center gap-3">
               <div className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--fraud-cleared)] shrink-0" />
                 <span className="text-[10px] text-[var(--text-tertiary)]">Blocked</span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--fraud-warning)] shrink-0" />
                 <span className="text-[10px] text-[var(--text-tertiary)]">Flagged</span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--fraud-critical)] shrink-0" />
                 <span className="text-[10px] text-[var(--text-tertiary)]">Loss</span>
               </div>
             </div>
@@ -386,10 +341,10 @@ export default function ThreatActivityView({
                 <span
                   className={`w-2 h-2 rounded-full shrink-0 ${
                     ev.status === "blocked"
-                      ? "bg-green-500"
+                      ? "bg-[var(--fraud-cleared)]"
                       : ev.status === "flagged"
-                      ? "bg-amber-400"
-                      : "bg-red-500"
+                      ? "bg-[var(--fraud-warning)]"
+                      : "bg-[var(--fraud-critical)]"
                   }`}
                   title={ev.status}
                 />

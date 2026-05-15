@@ -13,7 +13,7 @@ export default function InvestigationsPage() {
       </div>
 
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-[var(--bg-tertiary)] flex items-center justify-center mb-4">
+        <div className="w-12 h-12 rounded-xl bg-[var(--bg-tertiary)] flex items-center justify-center mb-4">
           <FileSearch
             className="w-6 h-6 text-[var(--text-tertiary)] shrink-0"
             strokeWidth={1.5}

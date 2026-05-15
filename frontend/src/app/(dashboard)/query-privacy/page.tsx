@@ -54,7 +54,7 @@ function QueryDemoView() {
   return (
     <div className="space-y-4">
       {/* Controls */}
-      <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-5">
+      <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-6">
         <h3 className="font-semibold text-[var(--text-primary)] mb-4">
           Interactive Query Simulation
         </h3>
@@ -96,7 +96,7 @@ function QueryDemoView() {
           </button>
           <button
             onClick={handleKnownFraud}
-            className="px-4 py-2.5 text-sm font-medium rounded-xl bg-red-600 text-white hover:bg-red-700 transition-colors"
+            className="px-4 py-2.5 text-sm font-medium rounded-xl bg-[var(--fraud-critical)] text-white transition-colors"
           >
             Query (Known Fraud)
           </button>
@@ -109,8 +109,8 @@ function QueryDemoView() {
       </div>
 
       {/* Query Log */}
-      <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)]">
-        <div className="px-5 py-4 border-b border-[var(--border-primary)]">
+      <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)]">
+        <div className="px-6 py-4 border-b border-[var(--border-primary)]">
           <h3 className="font-semibold text-[var(--text-primary)]">
             Query Log
           </h3>
@@ -281,7 +281,7 @@ function PrivacyEngineView() {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         {/* Bloom Filter Demo */}
-        <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-5">
+        <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-6">
           <h3 className="font-semibold text-[var(--text-primary)] mb-2">
             Bloom Filter Demo
           </h3>
@@ -344,7 +344,7 @@ function PrivacyEngineView() {
         </div>
 
         {/* Differential Privacy Demo */}
-        <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-5">
+        <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-6">
           <h3 className="font-semibold text-[var(--text-primary)] mb-2">
             Differential Privacy Demo
           </h3>
@@ -399,8 +399,8 @@ function PrivacyEngineView() {
       </div>
 
       {/* Techniques Matrix */}
-      <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)]">
-        <div className="px-5 py-4 border-b border-[var(--border-primary)]">
+      <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)]">
+        <div className="px-6 py-4 border-b border-[var(--border-primary)]">
           <h3 className="font-semibold text-[var(--text-primary)]">
             Privacy Techniques Matrix
           </h3>

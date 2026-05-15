@@ -5,6 +5,7 @@ interface StatCardProps {
   label: string;
   value: string;
   change: string;
+  highlight?: boolean;
 }
 
 export default function StatCard({
@@ -12,31 +13,37 @@ export default function StatCard({
   label,
   value,
   change,
+  highlight = false,
 }: StatCardProps) {
   const isPositive = change.startsWith("+");
 
   return (
-    <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-5 animate-card-in">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-10 h-10 rounded-xl bg-[var(--bg-tertiary)] flex items-center justify-center">
-          <Icon
-            className="w-5 h-5 text-[var(--text-secondary)] shrink-0"
-            strokeWidth={1.5}
-          />
-        </div>
-        <span className="text-xs text-[var(--text-tertiary)]">{label}</span>
+    <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] p-6 animate-card-in flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider">
+          {label}
+        </span>
+        <Icon className="w-3.5 h-3.5 text-[var(--text-tertiary)] shrink-0" strokeWidth={1.5} />
       </div>
-      <div className="text-3xl font-bold tracking-tight text-[var(--text-primary)]">
+
+      <div
+        className="text-3xl font-bold tracking-tight"
+        style={{ color: highlight ? "var(--brand-primary)" : "var(--text-primary)" }}
+      >
         {value}
       </div>
-      <div
-        className={`text-xs mt-1 ${
-          isPositive
-            ? "text-[var(--fraud-cleared)]"
-            : "text-[var(--fraud-critical)]"
-        }`}
-      >
-        {change} vs yesterday
+
+      <div className="flex items-center gap-1.5">
+        <span
+          className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium"
+          style={{
+            backgroundColor: isPositive ? "var(--fraud-cleared-bg)" : "var(--fraud-critical-bg)",
+            color: isPositive ? "var(--fraud-cleared)" : "var(--fraud-critical)",
+          }}
+        >
+          {change}
+        </span>
+        <span className="text-xs text-[var(--text-tertiary)]">vs yesterday</span>
       </div>
     </div>
   );

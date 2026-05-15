@@ -16,116 +16,79 @@ import {
   Search,
   Scale,
   Zap,
-  Network,
 } from "lucide-react";
-import ThemeToggle from "./ThemeToggle";
 
-const fraudSection = [
-  { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
-  { label: "APP Fraud", href: "/app-fraud", icon: ShieldAlert },
-  { label: "Unauthorised Fraud", href: "/unauthorised", icon: CreditCard },
-  { label: "First-Party Fraud", href: "/first-party", icon: Users },
-  { label: "Collusion Detection", href: "/collusion", icon: GitBranch },
+const sections = [
+  [
+    { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
+    { href: "/app-fraud", icon: ShieldAlert, label: "APP Fraud" },
+    { href: "/unauthorised", icon: CreditCard, label: "Unauthorised" },
+    { href: "/first-party", icon: Users, label: "First-Party" },
+    { href: "/collusion", icon: GitBranch, label: "Collusion" },
+  ],
+  [
+    { href: "/live-demo", icon: Zap, label: "Live Demo" },
+    { href: "/signal-exchange", icon: Radio, label: "Signal Exchange" },
+    { href: "/query-privacy", icon: Search, label: "Query & Privacy" },
+    { href: "/governance", icon: Scale, label: "Governance" },
+  ],
+  [
+    { href: "/attack-simulation", icon: Swords, label: "Attack Simulation" },
+    { href: "/investigations", icon: FileSearch, label: "Investigations" },
+    { href: "/analytics", icon: BarChart3, label: "Analytics" },
+    { href: "/settings", icon: Settings, label: "Settings" },
+  ],
 ];
-
-const meshSection = [
-  { label: "Live Demo", href: "/live-demo", icon: Zap },
-  { label: "Signal Exchange", href: "/signal-exchange", icon: Radio },
-  { label: "Query & Privacy", href: "/query-privacy", icon: Search },
-  { label: "Governance", href: "/governance", icon: Scale },
-  { label: "Orchestration", href: "/orchestration", icon: Network },
-];
-
-const toolsSection = [
-  { label: "Attack Simulation", href: "/attack-simulation", icon: Swords },
-  { label: "Case Investigation", href: "/investigations", icon: FileSearch },
-  { label: "Analytics", href: "/analytics", icon: BarChart3 },
-  { label: "Settings", href: "/settings", icon: Settings },
-];
-
-function NavSection({
-  label,
-  items,
-  pathname,
-}: {
-  label: string;
-  items: typeof fraudSection;
-  pathname: string;
-}) {
-  return (
-    <div>
-      <div className="px-3 pt-4 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)]">
-        {label}
-      </div>
-      <div className="space-y-0.5">
-        {items.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors ${
-                isActive
-                  ? "bg-[var(--sidebar-item-active)] text-[var(--sidebar-item-active-text)] font-medium"
-                  : "text-[var(--text-secondary)] hover:bg-[var(--sidebar-item-hover)]"
-              }`}
-            >
-              <item.icon className="w-4 h-4 shrink-0" strokeWidth={1.5} />
-              {item.label}
-            </Link>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-60 flex flex-col bg-[var(--sidebar-bg)]">
+    <aside className="w-[56px] shrink-0 flex flex-col bg-[var(--sidebar-bg)] border-r border-[var(--sidebar-border)] h-screen">
       {/* Logo */}
-      <div className="px-4 py-5 flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-lg bg-[var(--brand-primary)] flex items-center justify-center">
+      <div className="h-14 flex items-center justify-center border-b border-[var(--sidebar-border)] shrink-0">
+        <div className="w-7 h-7 rounded-lg bg-[var(--brand-primary)] flex items-center justify-center">
           <span
-            className="text-[var(--brand-primary-fg)] text-lg font-bold leading-none shrink-0"
-            style={{
-              fontFamily: "Georgia, 'Times New Roman', serif",
-              marginTop: "-1px",
-            }}
+            className="text-black text-sm font-bold leading-none"
+            style={{ fontFamily: "Georgia, serif" }}
           >
             Q
           </span>
         </div>
-        <span className="font-semibold text-[var(--text-primary)]">
-          Quorum
-        </span>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 overflow-y-auto">
-        <NavSection
-          label="Fraud Monitoring"
-          items={fraudSection}
-          pathname={pathname}
-        />
-        <NavSection
-          label="Sentinel Mesh"
-          items={meshSection}
-          pathname={pathname}
-        />
-        <NavSection
-          label="Tools"
-          items={toolsSection}
-          pathname={pathname}
-        />
+      <nav className="flex-1 flex flex-col py-3 overflow-y-auto">
+        {sections.map((section, si) => (
+          <div
+            key={si}
+            className={`flex flex-col items-center gap-0.5 px-2 ${
+              si > 0 ? "mt-2 pt-2 border-t border-[var(--sidebar-border)]" : ""
+            }`}
+          >
+            {section.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  title={item.label}
+                  className={`relative flex items-center justify-center w-9 h-9 rounded-xl transition-colors ${
+                    isActive
+                      ? "bg-[var(--sidebar-item-active)] text-[var(--sidebar-item-active-text)]"
+                      : "text-[var(--text-tertiary)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--text-secondary)]"
+                  }`}
+                >
+                  {isActive && (
+                    <span className="absolute -left-2 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-[var(--brand-primary)] rounded-r-full" />
+                  )}
+                  <item.icon className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
-
-      {/* Theme toggle */}
-      <div className="px-3 py-3 border-t border-[var(--sidebar-border)]">
-        <ThemeToggle />
-      </div>
     </aside>
   );
 }

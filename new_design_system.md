@@ -1,7 +1,7 @@
 # SOCius Design System
 
 ## 1. Introduction
-SOCius is a high-performance cybersecurity platform designed for clarity, rapid response, and deep analytical insight. This design system provides a unified framework for building consistent, accessible, and professional interfaces across web and mobile platforms.
+Quorum is a high-performance platform designed for clarity, rapid response, and deep analytical insight. This design system provides a unified framework for building consistent, accessible, and professional interfaces across web and mobile platforms.
 
 ## 2. Brand Identity
 The brand identity is defined by a high-contrast "Dark Mode" aesthetic, utilizing a vibrant neon accent color to draw attention to critical data points and interactive elements.
