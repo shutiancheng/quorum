@@ -15,6 +15,7 @@ import {
   Radio,
   Search,
   Scale,
+  Zap,
 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 
@@ -27,6 +28,7 @@ const fraudSection = [
 ];
 
 const meshSection = [
+  { label: "Live Demo", href: "/live-demo", icon: Zap },
   { label: "Signal Exchange", href: "/signal-exchange", icon: Radio },
   { label: "Query & Privacy", href: "/query-privacy", icon: Search },
   { label: "Governance", href: "/governance", icon: Scale },

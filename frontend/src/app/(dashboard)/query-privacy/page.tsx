@@ -34,7 +34,7 @@ export default function QueryPrivacyPage() {
 
 /* ── Query Demo ── */
 function QueryDemoView() {
-  const { participants, runQuery, queryLog, bloomFilter } = useNetwork();
+  const { participants, runQuery, queryLog } = useNetwork();
   const [selectedQuerier, setSelectedQuerier] = useState(participants[0].id);
   const [testId, setTestId] = useState("");
 

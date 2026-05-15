@@ -8,25 +8,9 @@ import {
   PARTICIPANT_TYPES,
   PRIVACY_METHOD_COLORS,
 } from "@/lib/network-data";
-import {
-  Radio,
-  Zap,
-  Globe,
-  Clock,
-  Landmark,
-  CreditCard,
-  Phone,
-  Monitor,
-} from "lucide-react";
+import { Radio, Zap, Globe, Clock } from "lucide-react";
 
 const tabs = ["Architecture", "Live Feed"];
-
-const typeIcons: Record<string, typeof Landmark> = {
-  bank: Landmark,
-  psp: CreditCard,
-  telco: Phone,
-  platform: Monitor,
-};
 
 export default function SignalExchangePage() {
   const [activeTab, setActiveTab] = useState("Architecture");
