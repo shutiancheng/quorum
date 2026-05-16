@@ -53,14 +53,28 @@ export default function AnalyticsClient({ countryFraud, alertTrends, fraudByType
     </div>
   );
 
-  /* ── Map tab: always full-screen ── */
+  /* ── Map tab: truly full-screen, no chrome ── */
   if (activeTab === "Map") {
     return (
-      <div className="fixed inset-0 z-40 flex flex-col bg-[var(--bg-secondary)]">
-        <div className="relative flex-1 min-h-0">
-          <WorldMapView fullscreen />
+      <div className="fixed inset-0 z-40">
+        <WorldMapView fullscreen />
+        {/* Floating tab switcher — bottom-left, minimal */}
+        <div className="absolute bottom-4 left-4 flex gap-1 z-50">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-3 py-1.5 text-[11px] font-semibold rounded-lg transition-colors backdrop-blur-sm ${
+                activeTab === tab
+                  ? "bg-[#F97316] text-white"
+                  : "bg-white/80 text-[var(--text-secondary)] hover:bg-white"
+              }`}
+              style={{ boxShadow: "var(--card-shadow)" }}
+            >
+              {tab}
+            </button>
+          ))}
         </div>
-        {tabBar}
       </div>
     );
   }
