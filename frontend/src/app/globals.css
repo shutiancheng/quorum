@@ -1,65 +1,66 @@
 @import "tailwindcss";
 
-/* ── Design Tokens — Dark-only palette ── */
+/* ── Design Tokens — Light / Orange palette ── */
 :root {
-  /* Brand */
-  --brand-primary: #E5FF8F;
-  --brand-primary-hover: #EDFFB1;
-  --brand-primary-fg: #000000;
+  /* Brand — orange */
+  --brand-primary: #F97316;
+  --brand-primary-hover: #EA6C08;
+  --brand-primary-fg: #FFFFFF;
+  --brand-accent: #C2410C;       /* dark orange for text on white — 6.7:1 */
 
-  /* Accent */
-  --accent-color: #00D0FF;
-  --accent-hover: #00B8E0;
+  /* Accent — blue (info / running states) */
+  --accent-color: #0369A1;
+  --accent-hover: #025A8E;
 
   /* Backgrounds */
-  --bg-primary: #111111;
-  --bg-secondary: #000000;
-  --bg-tertiary: #181818;
-  --bg-elevated: #1A1A1A;
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F4F5F7;
+  --bg-tertiary: #E8EAEe;
+  --bg-elevated: #FFFFFF;
 
   /* Text */
-  --text-primary: #FFFFFF;
-  --text-secondary: #9A9A9A;
+  --text-primary: #0A0A0A;
+  --text-secondary: #2E2E2E;
   --text-tertiary: #555555;
 
-  /* Borders — near-invisible, contrast comes from bg diff + shadow */
-  --border-primary: rgba(255, 255, 255, 0.05);
-  --border-secondary: rgba(255, 255, 255, 0.08);
+  /* Borders */
+  --border-primary: rgba(0, 0, 0, 0.12);
+  --border-secondary: rgba(0, 0, 0, 0.20);
 
   /* Buttons */
-  --btn-bg: #E5FF8F;
-  --btn-fg: #000000;
+  --btn-bg: #F97316;
+  --btn-fg: #FFFFFF;
 
   /* Toggle */
-  --toggle-track: #2A2A2A;
-  --toggle-active: #E5FF8F;
+  --toggle-track: #CACDD4;
+  --toggle-active: #F97316;
 
   /* Sidebar */
-  --sidebar-bg: #0A0A0A;
-  --sidebar-border: rgba(255, 255, 255, 0.05);
-  --sidebar-item-hover: rgba(255, 255, 255, 0.04);
-  --sidebar-item-active: rgba(229, 255, 143, 0.10);
-  --sidebar-item-active-text: #E5FF8F;
+  --sidebar-bg: #F9FAFB;
+  --sidebar-border: rgba(0, 0, 0, 0.08);
+  --sidebar-item-hover: rgba(0, 0, 0, 0.04);
+  --sidebar-item-active: rgba(249, 115, 22, 0.12);
+  --sidebar-item-active-text: #C2410C;
 
   /* Pills / Tags */
-  --pill-active-bg: #E5FF8F;
-  --pill-active-text: #000000;
+  --pill-active-bg: #F97316;
+  --pill-active-text: #FFFFFF;
 
-  /* Cards — contrast via bg + shadow, no hard border */
-  --card-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 4px 20px rgba(0,0,0,0.6);
-  --card-shadow-hover: 0 0 0 1px rgba(255,255,255,0.06), 0 8px 32px rgba(0,0,0,0.7);
-  --card-radius: 12px;
-  --card-radius-sm: 8px;
+  /* Cards — shadow only, no ring */
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.08);
+  --card-shadow-hover: 0 4px 12px rgba(0,0,0,0.12), 0 12px 32px rgba(0,0,0,0.12);
+  --card-radius: 10px;
+  --card-radius-sm: 7px;
 
-  /* Semantic — fraud-specific */
-  --fraud-critical: #FF3333;
-  --fraud-critical-bg: rgba(255, 51, 51, 0.10);
-  --fraud-warning: #FFA500;
-  --fraud-warning-bg: rgba(255, 165, 0, 0.10);
-  --fraud-cleared: #00FF41;
-  --fraud-cleared-bg: rgba(0, 255, 65, 0.10);
-  --fraud-review: #00D0FF;
-  --fraud-review-bg: rgba(0, 208, 255, 0.10);
+  /* Semantic — high contrast on white */
+  --fraud-critical: #991B1B;
+  --fraud-critical-bg: #FEE2E2;
+  --fraud-warning: #92400E;
+  --fraud-warning-bg: #FEF3C7;
+  --fraud-cleared: #14532D;
+  --fraud-cleared-bg: #DCFCE7;
+  --fraud-review: #1E3A8A;
+  --fraud-review-bg: #DBEAFE;
 }
 
 /* ── Global Base Styles ── */
@@ -75,8 +76,8 @@ html, body {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.14); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.26); }
 
 /* Card hover */
 .card-hover {
@@ -111,12 +112,12 @@ html, body {
 }
 
 @keyframes alert-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 51, 51, 0.5); }
-  50% { box-shadow: 0 0 0 6px rgba(255, 51, 51, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.45); }
+  50% { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
 }
 .animate-alert-pulse { animation: alert-pulse 1.5s ease-in-out infinite; }
 
-/* Glowing line animation for network diagrams */
+/* Glowing line animation */
 @keyframes line-glow {
   0%, 100% { opacity: 0.4; filter: drop-shadow(0 0 2px currentColor); }
   50%       { opacity: 0.9; filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 12px currentColor); }

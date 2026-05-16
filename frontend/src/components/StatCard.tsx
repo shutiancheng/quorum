@@ -18,27 +18,28 @@ export default function StatCard({
   const isPositive = change.startsWith("+");
 
   return (
-    <div className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] p-6 animate-card-in flex flex-col gap-3">
+    <div className="bg-[var(--bg-primary)] rounded-xl p-5 animate-card-in flex flex-col gap-3"
+         style={{ boxShadow: "var(--card-shadow)" }}>
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider">
+        <span className="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide">
           {label}
         </span>
         <Icon className="w-3.5 h-3.5 text-[var(--text-tertiary)] shrink-0" strokeWidth={1.5} />
       </div>
 
       <div
-        className="text-3xl font-bold tracking-tight"
-        style={{ color: highlight ? "var(--brand-primary)" : "var(--text-primary)" }}
+        className="text-[28px] font-bold tracking-tight leading-none"
+        style={{ color: highlight ? "var(--brand-accent)" : "var(--text-primary)" }}
       >
         {value}
       </div>
 
       <div className="flex items-center gap-1.5">
         <span
-          className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium"
+          className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold"
           style={{
-            backgroundColor: isPositive ? "var(--fraud-cleared-bg)" : "var(--fraud-critical-bg)",
-            color: isPositive ? "var(--fraud-cleared)" : "var(--fraud-critical)",
+            backgroundColor: isPositive ? "#14532D" : "#991B1B",
+            color: "#FFFFFF",
           }}
         >
           {change}

@@ -2,43 +2,59 @@
 
 import { useState } from "react";
 import {
-  CheckCircle2,
-  Loader2,
-  AlertTriangle,
-  Circle,
-  ChevronRight,
-  Database,
-  ShieldCheck,
-  Network,
-  Cpu,
-  Brain,
-  FlaskConical,
-  TrendingUp,
-  Scale,
-  Eye,
-  ArrowRight,
-  Info,
-  Clock,
+  CheckCircle2, Loader2, AlertTriangle, Circle, ChevronRight,
+  Database, ShieldCheck, Network, Cpu, Brain, FlaskConical,
+  TrendingUp, Scale, Eye, ArrowRight, Info, Clock,
 } from "lucide-react";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
+  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer, Cell, LineChart, Line,
 } from "recharts";
 import {
-  agents,
-  sourceRankings,
-  timelineEvents,
-  caseExample,
-  dataValuationData,
-  type Agent,
-  type AgentStatus,
+  agents, sourceRankings, timelineEvents, caseExample,
+  dataValuationData, type Agent, type AgentStatus,
 } from "@/lib/agent-orchestration-config";
+
+// ── Mock 24h data ─────────────────────────────────────────────────────────────
+
+const tx24h = [
+  { h: "00", volume: 12.4, fraud: 8,  tp: 98.2 },
+  { h: "01", volume: 8.1,  fraud: 5,  tp: 98.5 },
+  { h: "02", volume: 5.7,  fraud: 3,  tp: 98.8 },
+  { h: "03", volume: 4.2,  fraud: 2,  tp: 99.0 },
+  { h: "04", volume: 3.8,  fraud: 1,  tp: 99.1 },
+  { h: "05", volume: 5.1,  fraud: 2,  tp: 98.9 },
+  { h: "06", volume: 9.3,  fraud: 6,  tp: 98.6 },
+  { h: "07", volume: 18.7, fraud: 12, tp: 98.3 },
+  { h: "08", volume: 34.2, fraud: 22, tp: 98.1 },
+  { h: "09", volume: 52.8, fraud: 31, tp: 97.9 },
+  { h: "10", volume: 67.4, fraud: 38, tp: 97.8 },
+  { h: "11", volume: 78.9, fraud: 41, tp: 97.9 },
+  { h: "12", volume: 91.3, fraud: 48, tp: 98.0 },
+  { h: "13", volume: 88.1, fraud: 52, tp: 97.8 },
+  { h: "14", volume: 84.6, fraud: 44, tp: 98.1 },
+  { h: "15", volume: 79.2, fraud: 39, tp: 98.2 },
+  { h: "16", volume: 72.3, fraud: 35, tp: 98.3 },
+  { h: "17", volume: 61.8, fraud: 29, tp: 98.4 },
+  { h: "18", volume: 48.4, fraud: 23, tp: 98.5 },
+  { h: "19", volume: 38.7, fraud: 18, tp: 98.6 },
+  { h: "20", volume: 31.2, fraud: 14, tp: 98.7 },
+  { h: "21", volume: 24.6, fraud: 11, tp: 98.8 },
+  { h: "22", volume: 19.3, fraud: 9,  tp: 98.9 },
+  { h: "23", volume: 14.8, fraud: 7,  tp: 99.0 },
+];
+
+const fraudRateLast6h = tx24h.slice(18).map((d) => ({
+  h: d.h + ":00",
+  rate: +((d.fraud / d.volume) * 100).toFixed(2),
+  volume: d.volume,
+}));
+
+const qualityTrend = [
+  { day: "Mon", q: 91 }, { day: "Tue", q: 93 }, { day: "Wed", q: 90 },
+  { day: "Thu", q: 94 }, { day: "Fri", q: 92 }, { day: "Sat", q: 95 },
+  { day: "Sun", q: 94 },
+];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -47,17 +63,17 @@ const agentIcons = [
 ];
 
 const statusConfig: Record<AgentStatus, { label: string; color: string; bg: string; dot: string }> = {
-  completed:   { label: "Completed",   color: "var(--fraud-cleared)",   bg: "var(--fraud-cleared-bg)",  dot: "#16a34a" },
-  running:     { label: "Running",     color: "#6366f1",                bg: "#eef2ff",                  dot: "#6366f1" },
-  warning:     { label: "Warning",     color: "var(--fraud-warning)",   bg: "var(--fraud-warning-bg)",  dot: "#f59e0b" },
-  not_started: { label: "Not Started", color: "var(--text-tertiary)",   bg: "var(--bg-tertiary)",       dot: "#a8a29e" },
+  completed:   { label: "Completed",   color: "#FFFFFF", bg: "#14532D",              dot: "#FFFFFF" },
+  running:     { label: "Running",     color: "#FFFFFF", bg: "#0369A1",              dot: "#FFFFFF" },
+  warning:     { label: "Warning",     color: "#FFFFFF", bg: "#92400E",              dot: "#FFFFFF" },
+  not_started: { label: "Not Started", color: "#FFFFFF", bg: "#6B7280",              dot: "#FFFFFF" },
 };
 
 function StatusPill({ status }: { status: AgentStatus }) {
   const cfg = statusConfig[status];
   return (
     <span
-      className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-full"
+      className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-wide"
       style={{ backgroundColor: cfg.bg, color: cfg.color }}
     >
       <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: cfg.dot }} />
@@ -68,9 +84,9 @@ function StatusPill({ status }: { status: AgentStatus }) {
 
 function StatusIcon({ status }: { status: AgentStatus }) {
   if (status === "completed")
-    return <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "var(--fraud-cleared)" }} strokeWidth={2} />;
+    return <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "var(--brand-accent)" }} strokeWidth={2} />;
   if (status === "running")
-    return <Loader2 className="w-4 h-4 shrink-0 animate-spin" style={{ color: "#6366f1" }} strokeWidth={2} />;
+    return <Loader2 className="w-4 h-4 shrink-0 animate-spin" style={{ color: "var(--accent-color)" }} strokeWidth={2} />;
   if (status === "warning")
     return <AlertTriangle className="w-4 h-4 shrink-0" style={{ color: "var(--fraud-warning)" }} strokeWidth={2} />;
   return <Circle className="w-4 h-4 shrink-0" style={{ color: "var(--text-tertiary)" }} strokeWidth={1.5} />;
@@ -78,7 +94,8 @@ function StatusIcon({ status }: { status: AgentStatus }) {
 
 function DemoBadge() {
   return (
-    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded bg-[var(--fraud-warning-bg)] text-[var(--fraud-warning)]">
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold rounded"
+          style={{ backgroundColor: "#F97316", color: "#FFFFFF" }}>
       <Info className="w-2.5 h-2.5 shrink-0" strokeWidth={2} />
       demo
     </span>
@@ -86,17 +103,17 @@ function DemoBadge() {
 }
 
 const sourceTypeColors: Record<string, string> = {
-  government: "#6366f1",
-  company:    "#0ea5e9",
-  internal:   "#16a34a",
-  external:   "#f59e0b",
+  government: "#3D5C00",
+  company:    "#005B99",
+  internal:   "#14532D",
+  external:   "#92400E",
 };
 
-const sourceTypeBgs: Record<string, string> = {
-  government: "#eef2ff",
-  company:    "#f0f9ff",
-  internal:   "#f0fdf4",
-  external:   "#fffbeb",
+const signalTypeColors: Record<string, string> = {
+  government:  "#3D5C00",
+  company:     "#005B99",
+  graph:       "#5B21B6",
+  behavioural: "#92400E",
 };
 
 const signalTypeLabels: Record<string, string> = {
@@ -106,76 +123,239 @@ const signalTypeLabels: Record<string, string> = {
   behavioural: "Behavioural data",
 };
 
-// ── Pipeline Node ─────────────────────────────────────────────────────────────
+const customTooltipStyle = {
+  backgroundColor: "var(--bg-elevated)",
+  border: "1px solid var(--border-secondary)",
+  borderRadius: 8,
+  fontSize: 12,
+  color: "var(--text-primary)",
+};
 
-function PipelineNode({
-  agent,
-  icon: Icon,
-  index,
-  selected,
-  onSelect,
-  isLast,
-}: {
-  agent: Agent;
-  icon: React.ElementType;
-  index: number;
-  selected: boolean;
-  onSelect: () => void;
-  isLast: boolean;
-}) {
+// ── Stat Card ─────────────────────────────────────────────────────────────────
+
+function AgentStatCard({
+  icon: Icon, label, value, sub, accent,
+}: { icon: React.ElementType; label: string; value: string; sub: string; accent?: boolean }) {
   return (
-    <div className="flex flex-col items-center">
-      <button
-        onClick={onSelect}
-        className={`w-full text-left rounded-xl border transition-all p-3 ${
-          selected
-            ? "border-[var(--brand-primary)] bg-[var(--bg-tertiary)] shadow-sm ring-1 ring-[var(--brand-primary)]"
-            : "border-[var(--border-primary)] bg-[var(--bg-primary)] hover:border-[var(--border-secondary)] hover:bg-[var(--bg-secondary)]"
-        }`}
-      >
-        <div className="flex items-center gap-2.5 mb-2">
-          <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-            style={{ backgroundColor: "var(--bg-tertiary)" }}
-          >
-            <Icon className="w-3.5 h-3.5" style={{ color: "var(--text-secondary)" }} strokeWidth={1.5} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-xs font-semibold text-[var(--text-primary)] leading-tight truncate">
-              {agent.name}
-            </div>
-          </div>
-          <ChevronRight className="w-3 h-3 shrink-0 text-[var(--text-tertiary)]" strokeWidth={1.5} />
-        </div>
-        <div className="flex items-center justify-between gap-2">
-          <StatusPill status={agent.status} />
-          {agent.metrics[0] && (
-            <span className="text-[10px] text-[var(--text-tertiary)] truncate max-w-[90px]">
-              {agent.metrics[0].value} {agent.metrics[0].label}
-            </span>
-          )}
-        </div>
-      </button>
-      {!isLast && (
-        <div className="flex flex-col items-center py-0.5">
-          <div className="w-px h-3 bg-[var(--border-secondary)]" />
-          <div className="w-1.5 h-1.5 rotate-45 border-r border-b border-[var(--border-secondary)]" />
-        </div>
-      )}
+    <div className="bg-[var(--bg-primary)] rounded-lg p-4 animate-card-in flex flex-col gap-2"
+         style={{ boxShadow: "var(--card-shadow)" }}>
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide">{label}</span>
+        <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: accent ? "#E5FF8F" : "var(--text-tertiary)" }} strokeWidth={1.5} />
+      </div>
+      <div className="text-2xl font-bold tracking-tight leading-none"
+           style={{ color: accent ? "var(--brand-accent)" : "var(--text-primary)" }}>
+        {value}
+      </div>
+      <div className="text-[11px] text-[var(--text-tertiary)]">{sub}</div>
     </div>
   );
 }
 
-// ── Agent Detail Panel ────────────────────────────────────────────────────────
+// ── 24h Transaction Chart ─────────────────────────────────────────────────────
+
+function TxMonitorChart() {
+  return (
+    <div className="bg-[var(--bg-primary)] rounded-lg p-5 animate-card-in" style={{ boxShadow: "var(--card-shadow)" }}>
+      <div className="flex items-center justify-between mb-1">
+        <div>
+          <h2 className="text-sm font-semibold text-[var(--text-primary)]">Transaction Volume</h2>
+          <p className="text-[11px] text-[var(--text-tertiary)] mt-0.5">PayPal — last 24 hours · hourly buckets</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1.5 text-[11px] text-[var(--text-secondary)]">
+            <span className="w-3 h-0.5 rounded bg-[#8BBF00] inline-block" />Volume (K txns)
+          </span>
+          <span className="flex items-center gap-1.5 text-[11px] text-[var(--text-secondary)]">
+            <span className="w-3 h-0.5 rounded bg-[#DC2626] inline-block" />Fraud alerts
+          </span>
+          <DemoBadge />
+        </div>
+      </div>
+
+      <ResponsiveContainer width="100%" height={200}>
+        <AreaChart data={tx24h} margin={{ top: 10, right: 4, left: -12, bottom: 0 }}>
+          <defs>
+            <linearGradient id="limeGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%"  stopColor="#8BBF00" stopOpacity={0.20} />
+              <stop offset="95%" stopColor="#8BBF00" stopOpacity={0.01} />
+            </linearGradient>
+            <linearGradient id="redGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%"  stopColor="#DC2626" stopOpacity={0.18} />
+              <stop offset="95%" stopColor="#DC2626" stopOpacity={0.01} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
+          <XAxis
+            dataKey="h"
+            tick={{ fontSize: 10, fill: "var(--text-tertiary)" }}
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(v) => v % 4 === 0 ? `${v}:00` : ""}
+          />
+          <YAxis
+            tick={{ fontSize: 10, fill: "var(--text-tertiary)" }}
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(v) => `${v}K`}
+          />
+          <Tooltip
+            contentStyle={customTooltipStyle}
+            formatter={(v: any, name: any) =>
+              name === "volume" ? [`${v}K txns`, "Volume"] : [v, "Fraud alerts"]
+            }
+            labelFormatter={(l) => `Hour ${l}:00`}
+          />
+          <Area type="monotone" dataKey="volume" stroke="#8BBF00" strokeWidth={2}
+                fill="url(#limeGrad)" dot={false} />
+          <Area type="monotone" dataKey="fraud" stroke="#DC2626" strokeWidth={2}
+                fill="url(#redGrad)" dot={false} />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+// ── Agent Pipeline Panel ──────────────────────────────────────────────────────
+
+function AgentPipelinePanel({ onSelectAgent, selectedId }: {
+  onSelectAgent: (id: string) => void;
+  selectedId: string;
+}) {
+  return (
+    <div className="bg-[var(--bg-primary)] rounded-lg p-4 animate-card-in flex flex-col"
+         style={{ boxShadow: "var(--card-shadow)" }}>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-semibold text-[var(--text-primary)]">Agent Pipeline</h2>
+        <span className="text-[10px] text-[var(--text-tertiary)]">9 agents · live</span>
+      </div>
+      <div className="flex-1 space-y-1 overflow-y-auto">
+        {agents.map((agent, i) => {
+          const Icon = agentIcons[i];
+          const cfg = statusConfig[agent.status];
+          const isSelected = agent.id === selectedId;
+          return (
+            <button
+              key={agent.id}
+              onClick={() => onSelectAgent(agent.id)}
+              className={`w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all ${
+                isSelected
+                  ? "bg-[rgba(61,92,0,0.07)] border border-[rgba(61,92,0,0.18)]"
+                  : "hover:bg-[var(--bg-tertiary)] border border-transparent"
+              }`}
+            >
+              <StatusIcon status={agent.status} />
+              <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--text-tertiary)" }} strokeWidth={1.5} />
+              <span className="flex-1 text-xs text-[var(--text-secondary)] truncate">{agent.shortName}</span>
+              <span className="text-[9px] font-semibold uppercase tracking-wide shrink-0"
+                    style={{ color: cfg.color }}>
+                {cfg.label.slice(0, 4)}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Mini Charts Row ───────────────────────────────────────────────────────────
+
+function FraudRateChart() {
+  return (
+    <div className="bg-[var(--bg-primary)] rounded-lg p-4" style={{ boxShadow: "var(--card-shadow)" }}>
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <div className="text-xs font-semibold text-[var(--text-primary)]">Fraud Detection Rate</div>
+          <div className="text-[10px] text-[var(--text-tertiary)] mt-0.5">Last 6 hours · % of volume</div>
+        </div>
+        <DemoBadge />
+      </div>
+      <ResponsiveContainer width="100%" height={100}>
+        <LineChart data={fraudRateLast6h} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+          <XAxis dataKey="h" tick={{ fontSize: 10, fill: "var(--text-tertiary)" }} tickLine={false} axisLine={false} />
+          <YAxis tick={{ fontSize: 10, fill: "var(--text-tertiary)" }} tickLine={false} axisLine={false}
+                 tickFormatter={(v) => `${v}%`} />
+          <Tooltip contentStyle={customTooltipStyle} formatter={(v: any) => [`${v}%`, "Fraud rate"]} />
+          <Line type="monotone" dataKey="rate" stroke="#DC2626" strokeWidth={2} dot={{ fill: "#DC2626", r: 3 }} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function SourceValueChart() {
+  const data = dataValuationData.map((d, i) => ({
+    name: d.source.replace(" / Orbis", "").replace("Internal ", "").replace(" Registry", " Reg.").replace(" History", ""),
+    score: d.dataValueScore,
+    lift: +(d.marginalLift * 100).toFixed(1),
+  }));
+  const barColors = ["#3D5C00", "#3D5C00", "#005B99", "#005B99", "#92400E", "#5B21B6"];
+
+  return (
+    <div className="bg-[var(--bg-primary)] rounded-lg p-4" style={{ boxShadow: "var(--card-shadow)" }}>
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <div className="text-xs font-semibold text-[var(--text-primary)]">Source Value Scores</div>
+          <div className="text-[10px] text-[var(--text-tertiary)] mt-0.5">Data value index · 0–100</div>
+        </div>
+        <DemoBadge />
+      </div>
+      <ResponsiveContainer width="100%" height={100}>
+        <BarChart data={data} layout="vertical" margin={{ top: 0, right: 4, left: 2, bottom: 0 }}>
+          <XAxis type="number" tick={{ fontSize: 9, fill: "var(--text-tertiary)" }} tickLine={false} axisLine={false}
+                 domain={[0, 100]} />
+          <YAxis dataKey="name" type="category" width={82} tick={{ fontSize: 9, fill: "var(--text-secondary)" }}
+                 tickLine={false} axisLine={false} />
+          <Tooltip contentStyle={customTooltipStyle} formatter={(v: any) => [v, "Value score"]} />
+          <Bar dataKey="score" radius={[0, 4, 4, 0]} barSize={9}>
+            {data.map((_d, idx) => <Cell key={idx} fill={barColors[idx]} fillOpacity={0.85} />)}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function QualityTrendChart() {
+  return (
+    <div className="bg-[var(--bg-primary)] rounded-lg p-4" style={{ boxShadow: "var(--card-shadow)" }}>
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <div className="text-xs font-semibold text-[var(--text-primary)]">Data Quality Trend</div>
+          <div className="text-[10px] text-[var(--text-tertiary)] mt-0.5">Avg quality score · 7 days</div>
+        </div>
+        <DemoBadge />
+      </div>
+      <ResponsiveContainer width="100%" height={100}>
+        <AreaChart data={qualityTrend} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+          <defs>
+            <linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%"  stopColor="#0369A1" stopOpacity={0.18} />
+              <stop offset="95%" stopColor="#0369A1" stopOpacity={0.01} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
+          <XAxis dataKey="day" tick={{ fontSize: 10, fill: "var(--text-tertiary)" }} tickLine={false} axisLine={false} />
+          <YAxis tick={{ fontSize: 10, fill: "var(--text-tertiary)" }} tickLine={false} axisLine={false}
+                 domain={[85, 100]} />
+          <Tooltip contentStyle={customTooltipStyle} formatter={(v: any) => [v, "Quality"]} />
+          <Area type="monotone" dataKey="q" stroke="#0369A1" strokeWidth={2} fill="url(#blueGrad)" dot={false} />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+// ── Pipeline Full Tab ─────────────────────────────────────────────────────────
 
 function AgentDetailPanel({ agent, icon: Icon }: { agent: Agent; icon: React.ElementType }) {
   const updated = new Date(agent.lastUpdated).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-
   return (
     <div className="space-y-4 animate-card-in">
-      {/* Header */}
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-[var(--bg-tertiary)] flex items-center justify-center shrink-0">
+        <div className="w-10 h-10 rounded-lg bg-[var(--bg-tertiary)] flex items-center justify-center shrink-0">
           <Icon className="w-5 h-5" style={{ color: "var(--text-secondary)" }} strokeWidth={1.5} />
         </div>
         <div className="flex-1 min-w-0">
@@ -190,15 +370,11 @@ function AgentDetailPanel({ agent, icon: Icon }: { agent: Agent; icon: React.Ele
 
       <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{agent.description}</p>
 
-      {/* Metrics */}
       <div className="grid grid-cols-2 gap-2">
         {agent.metrics.map((m) => (
-          <div
-            key={m.label}
-            className="rounded-xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] p-3"
-          >
+          <div key={m.label} className="rounded-lg p-3 border border-[var(--border-primary)] bg-[var(--bg-secondary)]">
             <div className="flex items-start justify-between gap-1 mb-1">
-              <span className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide leading-tight">{m.label}</span>
+              <span className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide leading-tight">{m.label}</span>
               {m.demo && <DemoBadge />}
             </div>
             <div className="text-lg font-bold text-[var(--text-primary)] leading-tight">{m.value}</div>
@@ -206,9 +382,8 @@ function AgentDetailPanel({ agent, icon: Icon }: { agent: Agent; icon: React.Ele
         ))}
       </div>
 
-      {/* Warnings */}
       {agent.warnings.length > 0 && (
-        <div className="rounded-xl border border-[var(--fraud-warning)] bg-[var(--fraud-warning-bg)] p-3 space-y-1">
+        <div className="rounded-lg border border-[var(--fraud-warning)] bg-[var(--fraud-warning-bg)] p-3 space-y-1">
           <div className="flex items-center gap-1.5 mb-1">
             <AlertTriangle className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--fraud-warning)" }} strokeWidth={2} />
             <span className="text-xs font-semibold" style={{ color: "var(--fraud-warning)" }}>Warnings</span>
@@ -219,7 +394,6 @@ function AgentDetailPanel({ agent, icon: Icon }: { agent: Agent; icon: React.Ele
         </div>
       )}
 
-      {/* I/O */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)] mb-1.5">Inputs</div>
@@ -245,21 +419,19 @@ function AgentDetailPanel({ agent, icon: Icon }: { agent: Agent; icon: React.Ele
         </div>
       </div>
 
-      {/* Checks */}
       <div>
-        <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)] mb-1.5">Key Checks / Logic</div>
+        <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)] mb-1.5">Key Checks</div>
         <ul className="space-y-1">
           {agent.checks.map((c, i) => (
             <li key={i} className="flex items-start gap-1.5 text-xs text-[var(--text-secondary)]">
-              <CheckCircle2 className="w-3 h-3 shrink-0 mt-0.5" style={{ color: "var(--fraud-cleared)" }} strokeWidth={2} />
+              <CheckCircle2 className="w-3 h-3 shrink-0 mt-0.5" style={{ color: "var(--brand-accent)" }} strokeWidth={2} />
               {c}
             </li>
           ))}
         </ul>
       </div>
 
-      {/* Next action */}
-      <div className="rounded-xl border border-[var(--border-primary)] bg-[var(--bg-tertiary)] p-3">
+      <div className="rounded-lg bg-[var(--bg-tertiary)] p-3">
         <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)] mb-1">Next Recommended Action</div>
         <p className="text-xs text-[var(--text-primary)]">{agent.nextAction}</p>
       </div>
@@ -267,36 +439,36 @@ function AgentDetailPanel({ agent, icon: Icon }: { agent: Agent; icon: React.Ele
   );
 }
 
-// ── Pipeline Tab ──────────────────────────────────────────────────────────────
-
-function PipelineTab() {
-  const [selectedId, setSelectedId] = useState("data-intake");
+function PipelineTab({ selectedId, onSelect }: { selectedId: string; onSelect: (id: string) => void }) {
   const selected = agents.find((a) => a.id === selectedId)!;
   const selectedIdx = agents.findIndex((a) => a.id === selectedId);
   const SelectedIcon = agentIcons[selectedIdx];
 
   return (
-    <div className="grid grid-cols-[280px_1fr] gap-5">
-      {/* Pipeline column */}
-      <div className="space-y-0">
-        <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)] mb-3">
-          Agent Pipeline
-        </div>
-        {agents.map((agent, i) => (
-          <PipelineNode
-            key={agent.id}
-            agent={agent}
-            icon={agentIcons[i]}
-            index={i}
-            selected={selectedId === agent.id}
-            onSelect={() => setSelectedId(agent.id)}
-            isLast={i === agents.length - 1}
-          />
-        ))}
+    <div className="grid grid-cols-[260px_1fr] gap-5">
+      <div className="space-y-1">
+        {agents.map((agent, i) => {
+          const Icon = agentIcons[i];
+          const isSelected = agent.id === selectedId;
+          return (
+            <button
+              key={agent.id}
+              onClick={() => onSelect(agent.id)}
+              className={`w-full text-left flex items-center gap-2.5 px-3 py-2.5 rounded-lg border transition-all ${
+                isSelected
+                  ? "border-[rgba(90,124,10,0.25)] bg-[rgba(90,124,10,0.06)]"
+                  : "border-transparent hover:bg-[var(--bg-secondary)] hover:border-[var(--border-primary)]"
+              }`}
+            >
+              <StatusIcon status={agent.status} />
+              <Icon className="w-3.5 h-3.5 shrink-0 text-[var(--text-tertiary)]" strokeWidth={1.5} />
+              <span className="flex-1 text-xs font-medium text-[var(--text-secondary)] truncate">{agent.name}</span>
+              <ChevronRight className="w-3 h-3 shrink-0 text-[var(--text-tertiary)]" strokeWidth={1.5} />
+            </button>
+          );
+        })}
       </div>
-
-      {/* Detail panel */}
-      <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] p-5">
+      <div className="bg-[var(--bg-primary)] rounded-lg p-5" style={{ boxShadow: "var(--card-shadow)" }}>
         <AgentDetailPanel agent={selected} icon={SelectedIcon} />
       </div>
     </div>
@@ -306,32 +478,30 @@ function PipelineTab() {
 // ── Data Flow Diagram ─────────────────────────────────────────────────────────
 
 const flowSteps = [
-  { label: "Provider Data", sub: "Raw ingestion", color: "#6366f1" },
-  { label: "Quality Checks", sub: "Completeness & freshness", color: "#0ea5e9" },
-  { label: "Entity Matching", sub: "Cross-source resolution", color: "#8b5cf6" },
-  { label: "Feature Generation", sub: "312 fraud signals", color: "#f59e0b" },
-  { label: "Fraud Model", sub: "Ensemble scoring", color: "#ef4444" },
-  { label: "With vs Without", sub: "Ablation evaluation", color: "#ec4899" },
-  { label: "Data Value Score", sub: "0 – 100 per source", color: "#16a34a" },
+  { label: "Provider Data",    sub: "Raw ingestion",           color: "#3D5C00" },
+  { label: "Quality Checks",   sub: "Completeness & freshness", color: "#005B99" },
+  { label: "Entity Matching",  sub: "Cross-source resolution",  color: "#5B21B6" },
+  { label: "Feature Gen.",     sub: "312 fraud signals",        color: "#92400E" },
+  { label: "Fraud Model",      sub: "Ensemble scoring",         color: "#B91C1C" },
+  { label: "With vs Without",  sub: "Ablation evaluation",      color: "#9D174D" },
+  { label: "Value Score",      sub: "0 – 100 per source",       color: "#3D5C00" },
 ];
 
 function DataFlowDiagram() {
   return (
     <div className="overflow-x-auto">
-      <div className="flex items-center gap-0 min-w-max py-2">
+      <div className="flex items-center gap-0 min-w-max py-1">
         {flowSteps.map((step, i) => (
           <div key={i} className="flex items-center">
-            <div className="flex flex-col items-center">
-              <div
-                className="w-28 rounded-xl px-3 py-2.5 text-center"
-                style={{ backgroundColor: step.color + "18", border: `1.5px solid ${step.color}40` }}
-              >
-                <div className="text-xs font-semibold leading-tight" style={{ color: step.color }}>
-                  {step.label}
-                </div>
-                <div className="text-[10px] mt-0.5" style={{ color: step.color + "bb" }}>
-                  {step.sub}
-                </div>
+            <div
+              className="w-28 rounded-lg px-3 py-2.5 text-center"
+              style={{ backgroundColor: step.color + "12", border: `1px solid ${step.color}30` }}
+            >
+              <div className="text-xs font-semibold leading-tight" style={{ color: step.color }}>
+                {step.label}
+              </div>
+              <div className="text-[10px] mt-0.5" style={{ color: step.color + "99" }}>
+                {step.sub}
               </div>
             </div>
             {i < flowSteps.length - 1 && (
@@ -350,23 +520,20 @@ function DataValuationTab() {
   const chartData = dataValuationData.map((d) => ({
     name: d.source.replace(" / Orbis", "").replace("Internal ", ""),
     lift: +(d.marginalLift * 100).toFixed(1),
-    shapley: +(d.shapleyScore * 100).toFixed(1),
     score: d.dataValueScore,
   }));
-
-  const barColors = ["#6366f1", "#16a34a", "#0ea5e9", "#8b5cf6", "#f59e0b", "#ec4899"];
+  const barColors = ["#3D5C00", "#3D5C00", "#005B99", "#005B99", "#92400E", "#5B21B6"];
 
   return (
     <div className="space-y-5">
-      {/* Formula banner */}
-      <div className="rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] p-4">
+      <div className="rounded-lg bg-[var(--bg-primary)] p-4" style={{ boxShadow: "var(--card-shadow)" }}>
         <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-lg bg-[var(--bg-tertiary)] flex items-center justify-center shrink-0">
-            <TrendingUp className="w-4 h-4 text-[var(--text-secondary)] shrink-0" strokeWidth={1.5} />
+          <div className="w-8 h-8 rounded-lg bg-[rgba(90,124,10,0.10)] flex items-center justify-center shrink-0">
+            <TrendingUp className="w-4 h-4 shrink-0" style={{ color: "var(--brand-accent)" }} strokeWidth={1.5} />
           </div>
           <div>
             <div className="text-sm font-semibold text-[var(--text-primary)] mb-1">Data Valuation Formula</div>
-            <code className="text-xs font-mono bg-[var(--bg-tertiary)] px-2 py-1 rounded-lg text-[var(--text-primary)] border border-[var(--border-primary)]">
+            <code className="text-xs font-mono bg-[var(--bg-tertiary)] px-2 py-1 rounded-lg text-[var(--text-primary)]">
               Value(source) = Utility(model <strong>with</strong> source) − Utility(model <strong>without</strong> source)
             </code>
             <p className="text-xs text-[var(--text-tertiary)] mt-1.5">
@@ -376,103 +543,90 @@ function DataValuationTab() {
         </div>
       </div>
 
-      {/* Stat row */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: "Baseline PR-AUC", value: "0.721", sub: "No external sources" },
-          { label: "Full Ensemble PR-AUC", value: "0.847", sub: "+12.6 pp vs baseline" },
-          { label: "Top Source Lift", value: "+9.4 pp", sub: "Government Registry" },
-          { label: "Est. Annual Value", value: "£2.68M", sub: "Combined source uplift" },
+          { label: "Baseline PR-AUC",       value: "0.721", sub: "No external sources" },
+          { label: "Full Ensemble PR-AUC",  value: "0.847", sub: "+12.6 pp vs baseline", accent: true },
+          { label: "Top Source Lift",       value: "+9.4 pp", sub: "Government Registry", accent: true },
+          { label: "Est. Annual Value",     value: "£2.68M", sub: "Combined source uplift" },
         ].map((s) => (
-          <div key={s.label} className="rounded-xl border border-[var(--border-primary)] bg-[var(--bg-primary)] p-3 shadow-[var(--card-shadow)]">
+          <div key={s.label} className="rounded-lg bg-[var(--bg-primary)] p-3" style={{ boxShadow: "var(--card-shadow)" }}>
             <div className="flex items-start justify-between mb-1">
               <span className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide">{s.label}</span>
               <DemoBadge />
             </div>
-            <div className="text-xl font-bold text-[var(--text-primary)]">{s.value}</div>
+            <div className="text-xl font-bold" style={{ color: s.accent ? "var(--brand-accent)" : "var(--text-primary)" }}>{s.value}</div>
             <div className="text-[10px] text-[var(--text-tertiary)] mt-0.5">{s.sub}</div>
           </div>
         ))}
       </div>
 
-      {/* Chart + table */}
-      <div className="grid grid-cols-[1fr_1fr] gap-5">
-        {/* Marginal lift chart */}
-        <div className="rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-primary)] shadow-[var(--card-shadow)] p-4">
+      <div className="grid grid-cols-2 gap-5">
+        <div className="rounded-lg bg-[var(--bg-primary)] p-4" style={{ boxShadow: "var(--card-shadow)" }}>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">Marginal PR-AUC Lift by Source</h3>
             <DemoBadge />
           </div>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={chartData} layout="vertical" margin={{ left: 8, right: 16 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-primary)" horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 11, fill: "var(--text-tertiary)" }} tickFormatter={(v) => `+${v} pp`} />
-              <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11, fill: "var(--text-secondary)" }} />
-              <Tooltip
-                formatter={(v) => [`+${v} pp`, "PR-AUC lift"]}
-                contentStyle={{ backgroundColor: "var(--bg-elevated)", border: "1px solid var(--border-primary)", borderRadius: 10, fontSize: 12 }}
-              />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
+              <XAxis type="number" tick={{ fontSize: 11, fill: "var(--text-tertiary)" }} tickLine={false} axisLine={false}
+                     tickFormatter={(v) => `+${v} pp`} />
+              <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11, fill: "var(--text-secondary)" }}
+                     tickLine={false} axisLine={false} />
+              <Tooltip contentStyle={customTooltipStyle} formatter={(v: any) => [`+${v} pp`, "PR-AUC lift"]} />
               <Bar dataKey="lift" radius={[0, 4, 4, 0]}>
-                {chartData.map((_, idx) => (
-                  <Cell key={idx} fill={barColors[idx % barColors.length]} />
-                ))}
+                {chartData.map((_, idx) => <Cell key={idx} fill={barColors[idx % barColors.length]} fillOpacity={0.85} />)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Ablation table */}
-        <div className="rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-primary)] shadow-[var(--card-shadow)] p-4">
+        <div className="rounded-lg bg-[var(--bg-primary)] p-4" style={{ boxShadow: "var(--card-shadow)" }}>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">Leave-One-Out Ablation</h3>
             <DemoBadge />
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-[var(--border-primary)]">
-                  {["Source", "With", "Without", "Lift", "Shapley", "Score"].map((h) => (
-                    <th key={h} className="pb-2 text-left font-semibold text-[var(--text-tertiary)] pr-2 whitespace-nowrap">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {dataValuationData.map((d, i) => (
-                  <tr key={i} className="border-b border-[var(--border-primary)] last:border-0">
-                    <td className="py-2 pr-2 text-[var(--text-secondary)] font-medium whitespace-nowrap">
-                      {d.source.replace(" / Orbis", "").replace("Internal ", "Int. ")}
-                    </td>
-                    <td className="py-2 pr-2 font-mono text-[var(--text-primary)]">{d.utilityWith.toFixed(3)}</td>
-                    <td className="py-2 pr-2 font-mono text-[var(--text-tertiary)]">{d.utilityWithout.toFixed(3)}</td>
-                    <td className="py-2 pr-2 font-medium" style={{ color: "var(--fraud-cleared)" }}>
-                      +{(d.marginalLift * 100).toFixed(1)} pp
-                    </td>
-                    <td className="py-2 pr-2 font-mono text-[var(--text-secondary)]">{d.shapleyScore.toFixed(3)}</td>
-                    <td className="py-2">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-12 h-1.5 rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
-                          <div
-                            className="h-full rounded-full"
-                            style={{ width: `${d.dataValueScore}%`, backgroundColor: barColors[i % barColors.length] }}
-                          />
-                        </div>
-                        <span className="font-semibold text-[var(--text-primary)]">{d.dataValueScore}</span>
-                      </div>
-                    </td>
-                  </tr>
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-[var(--border-primary)]">
+                {["Source", "With", "Without", "Lift", "Shapley", "Score"].map((h) => (
+                  <th key={h} className="pb-2 text-left font-semibold text-[var(--text-tertiary)] pr-2 whitespace-nowrap">{h}</th>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </tr>
+            </thead>
+            <tbody>
+              {dataValuationData.map((d, i) => (
+                <tr key={i} className="border-b border-[var(--border-primary)] last:border-0">
+                  <td className="py-2 pr-2 text-[var(--text-secondary)] font-medium whitespace-nowrap">
+                    {d.source.replace(" / Orbis", "").replace("Internal ", "Int. ")}
+                  </td>
+                  <td className="py-2 pr-2 font-mono text-[var(--text-primary)]">{d.utilityWith.toFixed(3)}</td>
+                  <td className="py-2 pr-2 font-mono text-[var(--text-tertiary)]">{d.utilityWithout.toFixed(3)}</td>
+                  <td className="py-2 pr-2 font-medium" style={{ color: "#E5FF8F" }}>
+                    +{(d.marginalLift * 100).toFixed(1)} pp
+                  </td>
+                  <td className="py-2 pr-2 font-mono text-[var(--text-secondary)]">{d.shapleyScore.toFixed(3)}</td>
+                  <td className="py-2">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-12 h-1.5 rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${d.dataValueScore}%`, backgroundColor: barColors[i % barColors.length] }} />
+                      </div>
+                      <span className="font-semibold text-[var(--text-primary)]">{d.dataValueScore}</span>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* Utility dimensions note */}
-      <div className="rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] p-4">
+      <div className="rounded-lg bg-[var(--bg-primary)] p-4" style={{ boxShadow: "var(--card-shadow)" }}>
         <div className="text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-wide mb-2">Utility Dimensions (configurable)</div>
         <div className="flex flex-wrap gap-2">
           {["PR-AUC lift", "Recall at fixed false-positive rate", "Fraud loss prevented (£)", "False-positive cost reduction (£)", "Investigation cost reduction (£)"].map((dim) => (
-            <span key={dim} className="px-2.5 py-1 text-xs rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-primary)] text-[var(--text-secondary)]">
+            <span key={dim} className="px-2.5 py-1 text-xs rounded-lg bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-primary)]">
               {dim}
             </span>
           ))}
@@ -489,116 +643,89 @@ function SourceRankingsTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-[var(--text-tertiary)]">
-          Ranked by Data Value Score. All scores are illustrative — marked {" "}
-          <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-[var(--fraud-warning-bg)] text-[var(--fraud-warning)]">demo</span>.
+          Ranked by Data Value Score. All scores are illustrative — <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-[var(--fraud-warning-bg)] text-[var(--fraud-warning)]">demo</span>
         </p>
         <div className="flex items-center gap-2">
           {(["government", "internal", "company", "external"] as const).map((t) => (
-            <span key={t} className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-[var(--border-primary)] bg-[var(--bg-primary)]">
+            <span key={t} className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-primary)]">
               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: sourceTypeColors[t] }} />
               <span className="capitalize text-[var(--text-secondary)]">{t}</span>
             </span>
           ))}
         </div>
       </div>
-      <div className="rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-primary)] shadow-[var(--card-shadow)] overflow-hidden">
+      <div className="rounded-lg bg-[var(--bg-primary)] overflow-hidden" style={{ boxShadow: "var(--card-shadow)" }}>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-[var(--border-primary)] bg-[var(--bg-secondary)]">
-                {[
-                  "Source / Provider", "Type", "Coverage", "Freshness", "Quality",
-                  "Pred. Lift", "Fin. Utility", "Redundancy", "Uniqueness",
-                  "Value Score", "Weight", "Best Use Case",
-                ].map((h) => (
-                  <th key={h} className="px-3 py-2.5 text-left font-semibold text-[var(--text-tertiary)] whitespace-nowrap">
-                    {h}
-                  </th>
+                {["Source / Provider", "Type", "Coverage", "Freshness", "Quality", "Pred. Lift", "Fin. Utility", "Redundancy", "Uniqueness", "Value Score", "Weight", "Best Use Case"].map((h) => (
+                  <th key={h} className="px-3 py-2.5 text-left font-semibold text-[var(--text-tertiary)] whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {sourceRankings
-                .slice()
-                .sort((a, b) => b.dataValueScore - a.dataValueScore)
-                .map((src) => (
-                  <tr
-                    key={src.id}
-                    className="border-b border-[var(--border-primary)] last:border-0 hover:bg-[var(--bg-secondary)] transition-colors"
-                  >
-                    <td className="px-3 py-2.5 font-medium text-[var(--text-primary)] whitespace-nowrap">{src.name}</td>
-                    <td className="px-3 py-2.5">
-                      <span
-                        className="px-2 py-0.5 rounded-full text-[10px] font-medium capitalize"
-                        style={{ backgroundColor: sourceTypeBgs[src.type], color: sourceTypeColors[src.type] }}
-                      >
-                        {src.type}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5 text-[var(--text-secondary)]">{src.coverage}</td>
-                    <td className="px-3 py-2.5 text-[var(--text-secondary)]">{src.freshness}</td>
-                    <td className="px-3 py-2.5">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-10 h-1.5 rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
-                          <div
-                            className="h-full rounded-full"
-                            style={{
-                              width: `${src.qualityScore}%`,
-                              backgroundColor: src.qualityScore >= 80 ? "#16a34a" : src.qualityScore >= 60 ? "#f59e0b" : "#ef4444",
-                            }}
-                          />
-                        </div>
-                        <span className="text-[var(--text-primary)] font-medium">{src.qualityScore}</span>
+              {sourceRankings.slice().sort((a, b) => b.dataValueScore - a.dataValueScore).map((src) => (
+                <tr key={src.id} className="border-b border-[var(--border-primary)] last:border-0 hover:bg-[var(--bg-secondary)] transition-colors">
+                  <td className="px-3 py-2.5 font-medium text-[var(--text-primary)] whitespace-nowrap">{src.name}</td>
+                  <td className="px-3 py-2.5">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize"
+                          style={{ backgroundColor: sourceTypeColors[src.type] + "18", color: sourceTypeColors[src.type] }}>
+                      {src.type}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5 text-[var(--text-secondary)]">{src.coverage}</td>
+                  <td className="px-3 py-2.5 text-[var(--text-secondary)]">{src.freshness}</td>
+                  <td className="px-3 py-2.5">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-10 h-1.5 rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
+                        <div className="h-full rounded-full" style={{
+                          width: `${src.qualityScore}%`,
+                          backgroundColor: src.qualityScore >= 80 ? "#3D5C00" : src.qualityScore >= 60 ? "#92400E" : "#B91C1C",
+                        }} />
                       </div>
-                    </td>
-                    <td className="px-3 py-2.5 font-medium" style={{ color: src.predictiveLift.startsWith("+") ? "var(--fraud-cleared)" : "var(--text-tertiary)" }}>
-                      {src.predictiveLift}
-                    </td>
-                    <td className="px-3 py-2.5 text-[var(--text-secondary)]">{src.financialUtility}</td>
-                    <td className="px-3 py-2.5">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-8 h-1.5 rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
-                          <div
-                            className="h-full rounded-full"
-                            style={{
-                              width: `${src.redundancyScore}%`,
-                              backgroundColor: src.redundancyScore > 50 ? "#ef4444" : "#f59e0b",
-                            }}
-                          />
-                        </div>
-                        <span className="text-[var(--text-secondary)]">{src.redundancyScore}</span>
+                      <span className="text-[var(--text-primary)] font-medium">{src.qualityScore}</span>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2.5 font-medium" style={{ color: src.predictiveLift.startsWith("+") ? "#E5FF8F" : "var(--text-tertiary)" }}>
+                    {src.predictiveLift}
+                  </td>
+                  <td className="px-3 py-2.5 text-[var(--text-secondary)]">{src.financialUtility}</td>
+                  <td className="px-3 py-2.5">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-8 h-1.5 rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${src.redundancyScore}%`, backgroundColor: src.redundancyScore > 50 ? "#FF3333" : "#FFA500" }} />
                       </div>
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-8 h-1.5 rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
-                          <div className="h-full rounded-full bg-[#6366f1]" style={{ width: `${src.uniquenessScore}%` }} />
-                        </div>
-                        <span className="text-[var(--text-secondary)]">{src.uniquenessScore}</span>
+                      <span className="text-[var(--text-secondary)]">{src.redundancyScore}</span>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-8 h-1.5 rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
+                        <div className="h-full rounded-full bg-[#00D0FF]" style={{ width: `${src.uniquenessScore}%` }} />
                       </div>
-                    </td>
-                    <td className="px-3 py-2.5">
-                      {src.dataValueScore > 0 ? (
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-10 h-2 rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
-                            <div
-                              className="h-full rounded-full"
-                              style={{
-                                width: `${src.dataValueScore}%`,
-                                backgroundColor: src.dataValueScore >= 75 ? "#16a34a" : src.dataValueScore >= 55 ? "#f59e0b" : "#ef4444",
-                              }}
-                            />
-                          </div>
-                          <span className="font-bold text-[var(--text-primary)]">{src.dataValueScore}</span>
+                      <span className="text-[var(--text-secondary)]">{src.uniquenessScore}</span>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2.5">
+                    {src.dataValueScore > 0 ? (
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-10 h-2 rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
+                          <div className="h-full rounded-full" style={{
+                            width: `${src.dataValueScore}%`,
+                            backgroundColor: src.dataValueScore >= 75 ? "#3D5C00" : src.dataValueScore >= 55 ? "#92400E" : "#B91C1C",
+                          }} />
                         </div>
-                      ) : (
-                        <span className="text-[var(--text-tertiary)]">Pending</span>
-                      )}
-                    </td>
-                    <td className="px-3 py-2.5 font-semibold text-[var(--text-primary)]">{src.recommendedWeight}</td>
-                    <td className="px-3 py-2.5 text-[var(--text-secondary)] whitespace-nowrap">{src.bestUseCase}</td>
-                  </tr>
-                ))}
+                        <span className="font-bold text-[var(--text-primary)]">{src.dataValueScore}</span>
+                      </div>
+                    ) : (
+                      <span className="text-[var(--text-tertiary)]">Pending</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2.5 font-semibold text-[var(--text-primary)]">{src.recommendedWeight}</td>
+                  <td className="px-3 py-2.5 text-[var(--text-secondary)] whitespace-nowrap">{src.bestUseCase}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
@@ -609,17 +736,10 @@ function SourceRankingsTab() {
 
 // ── Case Explorer Tab ─────────────────────────────────────────────────────────
 
-const signalTypeColors: Record<string, string> = {
-  government:  "#6366f1",
-  company:     "#0ea5e9",
-  graph:       "#8b5cf6",
-  behavioural: "#f59e0b",
-};
-
 function CaseExplorerTab() {
   const c = caseExample;
-  const riskColor = c.riskBand === "Critical" ? "var(--fraud-critical)" : c.riskBand === "High" ? "#f59e0b" : "#16a34a";
-  const riskBg    = c.riskBand === "Critical" ? "var(--fraud-critical-bg)" : c.riskBand === "High" ? "var(--fraud-warning-bg)" : "var(--fraud-cleared-bg)";
+  const riskColor = c.riskBand === "Critical" ? "var(--fraud-critical)" : c.riskBand === "High" ? "var(--fraud-warning)" : "var(--brand-accent)";
+  const riskBg    = c.riskBand === "Critical" ? "var(--fraud-critical-bg)" : c.riskBand === "High" ? "var(--fraud-warning-bg)" : "rgba(229,255,143,0.10)";
 
   return (
     <div className="space-y-4">
@@ -630,15 +750,14 @@ function CaseExplorerTab() {
         <DemoBadge />
       </div>
 
-      {/* Case header */}
-      <div className="rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-primary)] shadow-[var(--card-shadow)] p-5">
+      <div className="rounded-lg bg-[var(--bg-primary)] p-5" style={{ boxShadow: "var(--card-shadow)" }}>
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide mb-0.5">Entity</div>
             <div className="text-lg font-bold text-[var(--text-primary)]">{c.entityName}</div>
             <div className="text-xs text-[var(--text-tertiary)] mt-0.5">Case ID: {c.id} · {c.reviewStatus}</div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
             <div className="text-center">
               <div className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide mb-1">Fraud Probability</div>
               <div className="text-3xl font-black" style={{ color: riskColor }}>
@@ -647,10 +766,8 @@ function CaseExplorerTab() {
             </div>
             <div className="text-center">
               <div className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide mb-1">Risk Band</div>
-              <span
-                className="inline-block px-3 py-1 rounded-xl text-sm font-bold"
-                style={{ backgroundColor: riskBg, color: riskColor }}
-              >
+              <span className="inline-block px-3 py-1 rounded-lg text-sm font-bold"
+                    style={{ backgroundColor: riskBg, color: riskColor }}>
                 {c.riskBand}
               </span>
             </div>
@@ -658,33 +775,23 @@ function CaseExplorerTab() {
         </div>
       </div>
 
-      {/* Signals */}
-      <div className="rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-primary)] shadow-[var(--card-shadow)] p-5">
+      <div className="rounded-lg bg-[var(--bg-primary)] p-5" style={{ boxShadow: "var(--card-shadow)" }}>
         <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4">Top Fraud Signals & Source Attribution</h3>
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {c.signals.map((sig, i) => (
-            <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-primary)]">
-              <div
-                className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold text-white"
-                style={{ backgroundColor: signalTypeColors[sig.sourceType] }}
-              >
+            <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-[var(--bg-secondary)]">
+              <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold"
+                   style={{ backgroundColor: signalTypeColors[sig.sourceType] + "20", color: signalTypeColors[sig.sourceType] }}>
                 {i + 1}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-[var(--text-primary)] font-medium leading-snug">{sig.signal}</p>
                 <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                  <span
-                    className="px-2 py-0.5 rounded-full text-[10px] font-medium"
-                    style={{
-                      backgroundColor: signalTypeColors[sig.sourceType] + "18",
-                      color: signalTypeColors[sig.sourceType],
-                    }}
-                  >
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                        style={{ backgroundColor: signalTypeColors[sig.sourceType] + "18", color: signalTypeColors[sig.sourceType] }}>
                     {sig.source}
                   </span>
-                  <span className="text-[10px] text-[var(--text-tertiary)]">
-                    {signalTypeLabels[sig.sourceType]}
-                  </span>
+                  <span className="text-[10px] text-[var(--text-tertiary)]">{signalTypeLabels[sig.sourceType]}</span>
                 </div>
               </div>
               <div className="text-right shrink-0">
@@ -692,15 +799,11 @@ function CaseExplorerTab() {
                 <div className="font-bold text-sm" style={{ color: signalTypeColors[sig.sourceType] }}>
                   {(sig.confidence * 100).toFixed(0)}%
                 </div>
-                <div className="text-[10px] text-[var(--text-tertiary)] mt-0.5">
-                  Weight {(sig.featureWeight * 100).toFixed(0)} pp
-                </div>
+                <div className="text-[10px] text-[var(--text-tertiary)] mt-0.5">Weight {(sig.featureWeight * 100).toFixed(0)} pp</div>
               </div>
             </div>
           ))}
         </div>
-
-        {/* Legend */}
         <div className="flex items-center gap-4 mt-4 pt-4 border-t border-[var(--border-primary)] flex-wrap">
           {(Object.entries(signalTypeLabels) as [string, string][]).map(([key, label]) => (
             <span key={key} className="flex items-center gap-1.5 text-[10px] text-[var(--text-secondary)]">
@@ -717,37 +820,30 @@ function CaseExplorerTab() {
 // ── Timeline Tab ──────────────────────────────────────────────────────────────
 
 const timelineTypeStyle = {
-  success: { dot: "#16a34a", text: "var(--fraud-cleared)" },
-  warning: { dot: "#f59e0b", text: "var(--fraud-warning)" },
-  info:    { dot: "#6366f1", text: "#6366f1" },
+  success: { dot: "var(--brand-accent)",  text: "var(--brand-accent)" },
+  warning: { dot: "var(--fraud-warning)", text: "var(--fraud-warning)" },
+  info:    { dot: "var(--text-tertiary)", text: "var(--text-secondary)" },
 };
 
 function TimelineTab() {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <p className="text-sm text-[var(--text-tertiary)]">
-          Orchestration activity log — today's pipeline run.
-        </p>
+        <p className="text-sm text-[var(--text-tertiary)]">Orchestration activity log — today's pipeline run.</p>
         <DemoBadge />
       </div>
-      <div className="rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-primary)] shadow-[var(--card-shadow)] p-5">
+      <div className="rounded-lg bg-[var(--bg-primary)] p-5" style={{ boxShadow: "var(--card-shadow)" }}>
         <div className="space-y-0">
           {timelineEvents.map((ev, i) => {
             const style = timelineTypeStyle[ev.type];
             return (
               <div key={i} className="flex gap-3">
-                {/* Timeline track */}
                 <div className="flex flex-col items-center">
-                  <div
-                    className="w-2.5 h-2.5 rounded-full shrink-0 mt-1.5"
-                    style={{ backgroundColor: style.dot }}
-                  />
+                  <div className="w-2.5 h-2.5 rounded-full shrink-0 mt-1.5" style={{ backgroundColor: style.dot }} />
                   {i < timelineEvents.length - 1 && (
                     <div className="w-px flex-1 bg-[var(--border-primary)] my-0.5" style={{ minHeight: 16 }} />
                   )}
                 </div>
-                {/* Content */}
                 <div className="pb-3 flex-1">
                   <div className="flex items-start gap-2 flex-wrap">
                     <span className="font-mono text-[10px] text-[var(--text-tertiary)] pt-0.5 shrink-0">{ev.time}</span>
@@ -755,9 +851,7 @@ function TimelineTab() {
                       {ev.agent}
                     </span>
                   </div>
-                  <p className="text-xs text-[var(--text-secondary)] mt-0.5" style={{ color: ev.type !== "info" ? style.text : undefined }}>
-                    {ev.event}
-                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: style.text }}>{ev.event}</p>
                 </div>
               </div>
             );
@@ -775,32 +869,36 @@ type Tab = typeof TABS[number];
 
 export default function OrchestrationPage() {
   const [activeTab, setActiveTab] = useState<Tab>("Pipeline");
+  const [selectedAgentId, setSelectedAgentId] = useState("data-intake");
 
-  const runningCount  = agents.filter((a) => a.status === "running").length;
-  const warningCount  = agents.filter((a) => a.status === "warning").length;
+  const runningCount   = agents.filter((a) => a.status === "running").length;
+  const warningCount   = agents.filter((a) => a.status === "warning").length;
   const completedCount = agents.filter((a) => a.status === "completed").length;
 
   return (
     <div className="space-y-5">
-      {/* Header */}
+      {/* ── Header ── */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Agentic Orchestration</h1>
           <p className="text-sm text-[var(--text-tertiary)] mt-1">
-            Multi-agent fraud intelligence & data valuation pipeline
+            Multi-agent fraud intelligence &amp; data valuation pipeline · PayPal transaction monitoring — last 24 hours
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-[var(--fraud-cleared-bg)] text-[var(--fraud-cleared)] border border-[var(--fraud-cleared)]/20">
+          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold"
+                style={{ backgroundColor: "#14532D", color: "#FFFFFF" }}>
             <CheckCircle2 className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
             {completedCount} Completed
           </span>
-          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-[#eef2ff] text-[#6366f1] border border-[#6366f1]/20">
+          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold"
+                style={{ backgroundColor: "#0369A1", color: "#FFFFFF" }}>
             <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" strokeWidth={2} />
             {runningCount} Running
           </span>
           {warningCount > 0 && (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-[var(--fraud-warning-bg)] text-[var(--fraud-warning)] border border-[var(--fraud-warning)]/20">
+            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold"
+                  style={{ backgroundColor: "#92400E", color: "#FFFFFF" }}>
               <AlertTriangle className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
               {warningCount} Warning
             </span>
@@ -808,34 +906,36 @@ export default function OrchestrationPage() {
         </div>
       </div>
 
-      {/* Data flow summary */}
-      <div className="rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] p-4">
-        <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)] mb-3">
+      {/* ── Stat Cards ── */}
+      <div className="grid grid-cols-4 gap-4">
+        <AgentStatCard icon={Database}   label="Records in pipeline"   value="2.85M"   sub="Across 7 providers" accent />
+        <AgentStatCard icon={Network}    label="Entities resolved"     value="18,420"  sub="71.4% cross-source match rate" />
+        <AgentStatCard icon={Brain}      label="Model PR-AUC"          value="0.847"   sub="v3.4.0 live · v3.4.1 training" accent />
+        <AgentStatCard icon={ShieldCheck} label="Sources active"       value="6 / 7"   sub="Source G pending quality gate" />
+      </div>
+
+      {/* ── 24h chart + pipeline panel ── */}
+      <div className="grid grid-cols-[1fr_280px] gap-4">
+        <TxMonitorChart />
+        <AgentPipelinePanel selectedId={selectedAgentId} onSelectAgent={setSelectedAgentId} />
+      </div>
+
+      {/* ── Mini charts ── */}
+      <div className="grid grid-cols-3 gap-4">
+        <FraudRateChart />
+        <SourceValueChart />
+        <QualityTrendChart />
+      </div>
+
+      {/* ── Data flow ── */}
+      <div className="rounded-lg bg-[var(--bg-primary)] p-4" style={{ boxShadow: "var(--card-shadow)" }}>
+        <div className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide mb-3">
           Data Value Pipeline
         </div>
         <DataFlowDiagram />
       </div>
 
-      {/* Status strip */}
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          { label: "Records in pipeline", value: "2.85M", sub: "Across 7 providers", color: "var(--fraud-cleared)" },
-          { label: "Entities resolved",   value: "18,420", sub: "71.4% cross-source match rate", color: "#6366f1" },
-          { label: "Active model version", value: "v3.4.0", sub: "v3.4.1 retraining in progress", color: "var(--fraud-warning)" },
-        ].map((s) => (
-          <div key={s.label} className="rounded-xl border border-[var(--border-primary)] bg-[var(--bg-primary)] shadow-[var(--card-shadow)] p-3 flex items-center gap-3">
-            <div className="w-2 h-8 rounded-full shrink-0" style={{ backgroundColor: s.color + "60" }} />
-            <div>
-              <div className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide">{s.label}</div>
-              <div className="font-bold text-[var(--text-primary)] text-base">{s.value}</div>
-              <div className="text-[10px] text-[var(--text-tertiary)]">{s.sub}</div>
-            </div>
-            <DemoBadge />
-          </div>
-        ))}
-      </div>
-
-      {/* Tabs */}
+      {/* ── Tabs ── */}
       <div className="-mx-6 px-6 border-b border-[var(--border-primary)] flex items-center gap-1">
         {TABS.map((tab) => (
           <button
@@ -843,7 +943,7 @@ export default function OrchestrationPage() {
             onClick={() => setActiveTab(tab)}
             className={`px-3 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
               activeTab === tab
-                ? "border-[var(--brand-primary)] text-[var(--text-primary)]"
+                ? "border-[#F97316] text-[#C2410C]"
                 : "border-transparent text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
             }`}
           >
@@ -852,13 +952,12 @@ export default function OrchestrationPage() {
         ))}
       </div>
 
-      {/* Tab content */}
       <div className="pt-1">
-        {activeTab === "Pipeline"         && <PipelineTab />}
-        {activeTab === "Data Valuation"   && <DataValuationTab />}
-        {activeTab === "Source Rankings"  && <SourceRankingsTab />}
-        {activeTab === "Case Explorer"    && <CaseExplorerTab />}
-        {activeTab === "Timeline"         && <TimelineTab />}
+        {activeTab === "Pipeline"        && <PipelineTab selectedId={selectedAgentId} onSelect={setSelectedAgentId} />}
+        {activeTab === "Data Valuation"  && <DataValuationTab />}
+        {activeTab === "Source Rankings" && <SourceRankingsTab />}
+        {activeTab === "Case Explorer"   && <CaseExplorerTab />}
+        {activeTab === "Timeline"        && <TimelineTab />}
       </div>
     </div>
   );
