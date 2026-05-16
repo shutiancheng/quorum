@@ -141,7 +141,7 @@ function AgentStatCard({
          style={{ boxShadow: "var(--card-shadow)" }}>
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide">{label}</span>
-        <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: accent ? "#E5FF8F" : "var(--text-tertiary)" }} strokeWidth={1.5} />
+        <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--text-tertiary)" }} strokeWidth={1.5} />
       </div>
       <div className="text-2xl font-bold tracking-tight leading-none"
            style={{ color: accent ? "var(--brand-accent)" : "var(--text-primary)" }}>
@@ -603,7 +603,7 @@ function DataValuationTab() {
                   </td>
                   <td className="py-2 pr-2 font-mono text-[var(--text-primary)]">{d.utilityWith.toFixed(3)}</td>
                   <td className="py-2 pr-2 font-mono text-[var(--text-tertiary)]">{d.utilityWithout.toFixed(3)}</td>
-                  <td className="py-2 pr-2 font-medium" style={{ color: "#E5FF8F" }}>
+                  <td className="py-2 pr-2 font-medium" style={{ color: "var(--brand-accent)" }}>
                     +{(d.marginalLift * 100).toFixed(1)} pp
                   </td>
                   <td className="py-2 pr-2 font-mono text-[var(--text-secondary)]">{d.shapleyScore.toFixed(3)}</td>
@@ -687,7 +687,7 @@ function SourceRankingsTab() {
                       <span className="text-[var(--text-primary)] font-medium">{src.qualityScore}</span>
                     </div>
                   </td>
-                  <td className="px-3 py-2.5 font-medium" style={{ color: src.predictiveLift.startsWith("+") ? "#E5FF8F" : "var(--text-tertiary)" }}>
+                  <td className="px-3 py-2.5 font-medium" style={{ color: src.predictiveLift.startsWith("+") ? "var(--brand-accent)" : "var(--text-tertiary)" }}>
                     {src.predictiveLift}
                   </td>
                   <td className="px-3 py-2.5 text-[var(--text-secondary)]">{src.financialUtility}</td>
