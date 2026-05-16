@@ -9,7 +9,7 @@ import {
   CreditCard,
   Users,
   GitBranch,
-  FileSearch,
+
   Settings,
   BarChart3,
   Swords,
@@ -39,7 +39,6 @@ const sections = [
   ],
   [
     { href: "/attack-simulation", icon: Swords, label: "Attack Simulation" },
-    { href: "/investigations", icon: FileSearch, label: "Investigations" },
     { href: "/analytics", icon: BarChart3, label: "Analytics" },
     { href: "/settings", icon: Settings, label: "Settings" },
   ],
