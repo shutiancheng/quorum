@@ -56,13 +56,28 @@ export default function Sidebar() {
     >
       {/* Logo */}
       <div className="h-14 flex items-center gap-2.5 border-b border-[var(--sidebar-border)] shrink-0 px-[14px]">
-        <div className="w-7 h-7 rounded-lg bg-[var(--brand-primary)] flex items-center justify-center shrink-0">
-          <span
-            className="text-black text-sm font-bold leading-none"
-            style={{ fontFamily: "Georgia, serif" }}
-          >
-            Q
-          </span>
+        <div className="relative flex items-center justify-center shrink-0" style={{ width: 28, height: 28 }}>
+          {/* Orbital ring */}
+          <div className="absolute rounded-full pointer-events-none" style={{
+            width: 40, height: 40, left: "50%", top: "50%",
+            border: "1px solid rgba(249,115,22,0.35)",
+            animation: "ag-spin 8s linear infinite",
+          }} />
+          {/* Orbiting dot */}
+          <div className="absolute rounded-full pointer-events-none" style={{
+            width: 5, height: 5, left: "50%", top: "50%",
+            backgroundColor: "#F97316",
+            boxShadow: "0 0 6px 2px rgba(249,115,22,0.7)",
+            animation: "ag-orbit-dot 8s linear infinite",
+          }} />
+          <div className="w-7 h-7 rounded-lg bg-[var(--brand-primary)] flex items-center justify-center">
+            <span
+              className="text-black text-sm font-bold leading-none"
+              style={{ fontFamily: "Georgia, serif" }}
+            >
+              Q
+            </span>
+          </div>
         </div>
         {!collapsed && (
           <span className="text-[var(--text-primary)] text-sm font-semibold whitespace-nowrap">
