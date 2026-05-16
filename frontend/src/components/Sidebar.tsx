@@ -14,7 +14,7 @@ import {
   BarChart3,
   Swords,
   Radio,
-  Search,
+
 
   Zap,
   Network,
@@ -33,7 +33,6 @@ const sections = [
   [
     { href: "/live-demo", icon: Zap, label: "Live Demo" },
     { href: "/signal-exchange", icon: Radio, label: "Signal Exchange" },
-    { href: "/query-privacy", icon: Search, label: "Query & Privacy" },
     { href: "/orchestration", icon: Network, label: "Orchestration" },
   ],
   [
