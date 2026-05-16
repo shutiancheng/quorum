@@ -13,10 +13,8 @@ import {
   Settings,
   BarChart3,
   Swords,
-  Radio,
 
 
-  Zap,
   Network,
   PanelLeftClose,
   PanelLeftOpen,
@@ -31,8 +29,6 @@ const sections = [
     { href: "/collusion", icon: GitBranch, label: "Collusion" },
   ],
   [
-    { href: "/live-demo", icon: Zap, label: "Live Demo" },
-    { href: "/signal-exchange", icon: Radio, label: "Signal Exchange" },
     { href: "/orchestration", icon: Network, label: "Orchestration" },
   ],
   [
