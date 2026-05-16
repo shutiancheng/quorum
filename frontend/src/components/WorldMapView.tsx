@@ -322,31 +322,34 @@ export default function WorldMapView({
   );
 
   useEffect(() => {
-    if (!fullscreen) return;
     const el = mapRef.current;
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
-      if (!e.ctrlKey) return;
       e.preventDefault();
+      const rect = el.getBoundingClientRect();
+      const mx = e.clientX - rect.left - rect.width / 2;
+      const my = e.clientY - rect.top - rect.height / 2;
       setZoom((z) => {
-        const newZ = Math.min(Math.max(z + (e.deltaY > 0 ? -0.08 : 0.08), 1), 5);
-        // When zooming out, shrink the allowed pan range
-        setPan((p) => clampPan(p.x, p.y, newZ));
+        const delta = e.deltaY > 0 ? -0.15 : 0.15;
+        const newZ = Math.min(Math.max(z + delta, 1), 7);
+        setPan((p) => {
+          const scale = newZ / z;
+          return clampPan(mx + (p.x - mx) * scale, my + (p.y - my) * scale, newZ);
+        });
         return newZ;
       });
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
-  }, [fullscreen, clampPan]);
+  }, [clampPan]);
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
-      if (!fullscreen) return;
       setIsPanning(true);
       setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
-      (e.target as Element).setPointerCapture(e.pointerId);
+      (e.currentTarget as Element).setPointerCapture(e.pointerId);
     },
-    [fullscreen, pan]
+    [pan]
   );
   const onPointerMove = useCallback(
     (e: React.PointerEvent) => {
