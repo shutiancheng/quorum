@@ -71,26 +71,27 @@ function fmtTime(d: Date): string {
   });
 }
 
-function lossFill(lossM: number, alpha = 0.5): string {
-  if (lossM >= 200) return `rgba(220,38,38,${alpha})`;
-  if (lossM >= 100) return `rgba(239,68,68,${alpha * 0.92})`;
-  if (lossM >= 50)  return `rgba(249,115,22,${alpha * 0.85})`;
-  if (lossM >= 20)  return `rgba(245,158,11,${alpha * 0.78})`;
-  if (lossM >= 10)  return `rgba(234,179,8,${alpha * 0.68})`;
-  if (lossM >= 5)   return `rgba(132,204,22,${alpha * 0.58})`;
-  if (lossM > 0)    return `rgba(74,222,128,${alpha * 0.48})`;
-  return `rgba(100,116,139,${alpha * 0.25})`;
+// Green (low/safe) → Yellow → Orange → Red (high/critical)
+function lossFill(lossM: number, alpha = 0.62): string {
+  if (lossM >= 200) return `rgba(127,29,29,${alpha})`;
+  if (lossM >= 100) return `rgba(185,28,28,${alpha})`;
+  if (lossM >= 50)  return `rgba(220,38,38,${alpha})`;
+  if (lossM >= 20)  return `rgba(234,88,12,${alpha})`;
+  if (lossM >= 10)  return `rgba(202,138,4,${alpha})`;
+  if (lossM >= 5)   return `rgba(101,163,13,${alpha})`;
+  if (lossM > 0)    return `rgba(34,197,94,${alpha * 0.85})`;
+  return `rgba(203,213,225,0.45)`;
 }
 
 function lossStroke(lossM: number): string {
-  if (lossM >= 200) return "var(--fraud-critical)";
-  if (lossM >= 100) return "#ef4444";
-  if (lossM >= 50)  return "#f97316";
-  if (lossM >= 20)  return "var(--fraud-warning)";
-  if (lossM >= 10)  return "#eab308";
-  if (lossM >= 5)   return "#84cc16";
-  if (lossM > 0)    return "var(--fraud-cleared)";
-  return "var(--border-primary)";
+  if (lossM >= 200) return "#7F1D1D";
+  if (lossM >= 100) return "#991B1B";
+  if (lossM >= 50)  return "#B91C1C";
+  if (lossM >= 20)  return "#C2410C";
+  if (lossM >= 10)  return "#D97706";
+  if (lossM >= 5)   return "#4D7C0F";
+  if (lossM > 0)    return "#16A34A";
+  return "rgba(0,0,0,0.16)";
 }
 
 const FRAUD_LABELS = ["APP", "ATO", "CNP", "1st Party", "BNPL"] as const;
@@ -410,13 +411,13 @@ export default function WorldMapView({
             d={d}
             fill={
               data
-                ? lossFill(loss, isHovered ? 0.78 : isFlashing ? 0.65 : 0.45)
-                : "var(--bg-tertiary)"
+                ? lossFill(loss, isHovered ? 0.90 : isFlashing ? 0.78 : 0.62)
+                : "#DDE1E8"
             }
             stroke={
-              (isHovered || isFlashing) && data
-                ? lossStroke(loss)
-                : "var(--border-primary)"
+              data
+                ? (isHovered || isFlashing ? lossStroke(loss) : `${lossStroke(loss)}88`)
+                : "rgba(0,0,0,0.14)"
             }
             strokeWidth={isHovered ? 1.6 : isFlashing ? 1.2 : 0.4}
             className="cursor-pointer"
@@ -544,13 +545,14 @@ export default function WorldMapView({
     <div className="absolute top-14 right-3 bg-[var(--bg-elevated)]/80 backdrop-blur-sm border border-[var(--border-primary)] rounded-lg px-2.5 py-2 text-[10px]">
       <p className="font-medium text-[var(--text-secondary)] mb-1.5">Annual Fraud Loss</p>
       {[
-        { label: "\u2265 $200M",   color: "var(--fraud-critical)" },
-        { label: "$100\u2013200M", color: "#ef4444" },
-        { label: "$50\u2013100M",  color: "#f97316" },
-        { label: "$20\u201350M",   color: "var(--fraud-warning)" },
-        { label: "$10\u201320M",   color: "#eab308" },
-        { label: "$5\u201310M",    color: "#84cc16" },
-        { label: "< $5M",          color: "var(--fraud-cleared)" },
+        { label: "\u2265 $200M",   color: "#7F1D1D" },
+        { label: "$100\u2013200M", color: "#991B1B" },
+        { label: "$50\u2013100M",  color: "#B91C1C" },
+        { label: "$20\u201350M",   color: "#C2410C" },
+        { label: "$10\u201320M",   color: "#D97706" },
+        { label: "$5\u201310M",    color: "#4D7C0F" },
+        { label: "< $5M",     color: "#16A34A" },
+        { label: "No data",   color: "#94A3B8" },
       ].map(({ label, color }) => (
         <div key={label} className="flex items-center gap-1.5 mb-0.5">
           <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
@@ -661,6 +663,40 @@ export default function WorldMapView({
     </div>
   );
 
+  /* ── Zoom controls (shared) ── */
+  const zoomControls = (
+    <div className="absolute top-3 right-3 flex flex-col gap-1 z-10">
+      <button
+        onClick={() => setZoom((z) => { const nz = Math.min(z + 0.6, 7); setPan((p) => clampPan(p.x, p.y, nz)); return nz; })}
+        className="w-7 h-7 rounded-md bg-white/90 backdrop-blur-sm flex items-center justify-center text-sm font-bold text-[var(--text-primary)] hover:bg-white transition-colors"
+        style={{ boxShadow: "var(--card-shadow)" }}
+      >+</button>
+      <button
+        onClick={() => setZoom((z) => { const nz = Math.max(z - 0.6, 1); setPan((p) => clampPan(p.x, p.y, nz)); return nz; })}
+        className="w-7 h-7 rounded-md bg-white/90 backdrop-blur-sm flex items-center justify-center text-sm font-bold text-[var(--text-primary)] hover:bg-white transition-colors"
+        style={{ boxShadow: "var(--card-shadow)" }}
+      >−</button>
+      {zoom > 1.05 && (
+        <button
+          onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}
+          className="w-7 h-7 rounded-md flex items-center justify-center hover:opacity-90 transition-opacity text-white text-[10px] font-bold"
+          style={{ backgroundColor: "#F97316", boxShadow: "var(--card-shadow)" }}
+          title="Reset zoom"
+        >1×</button>
+      )}
+    </div>
+  );
+
+  const zoomIndicator = (
+    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 pointer-events-none">
+      {zoom > 1.05 ? (
+        <span className="inline-block bg-white/80 backdrop-blur-sm rounded-md px-2 py-0.5 text-[10px] font-mono font-semibold text-[var(--text-secondary)]">{zoom.toFixed(1)}×</span>
+      ) : (
+        <span className="inline-block bg-white/70 backdrop-blur-sm rounded-md px-2 py-0.5 text-[9px] text-[var(--text-tertiary)]">Scroll to zoom · drag to pan</span>
+      )}
+    </div>
+  );
+
   /* ═══ Fullscreen ═══ */
   if (fullscreen) {
     return (
@@ -685,45 +721,49 @@ export default function WorldMapView({
           {mapSvg()}
         </svg>
         {liveStats}
+        {zoomControls}
+        {zoomIndicator}
         {countryPanel}
         {legendPanel}
         {activityFeed}
-        <div className="absolute bottom-14 right-3 text-[10px] text-[var(--text-tertiary)] bg-[var(--bg-elevated)]/70 backdrop-blur-sm rounded-md px-2 py-1 pointer-events-none">
-          Pinch to zoom &middot; Drag to pan
-        </div>
       </div>
     );
   }
 
   /* ═══ Normal layout ═══ */
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-4 gap-3">
-        {[
-          { label: "Projected Losses (2026)", value: `$${(TOTAL_ANNUAL_LOSS_M * YOY_GROWTH / 1000).toFixed(2)}B`, color: "var(--fraud-critical)" },
-          { label: "Today\u2019s Losses", value: `$${Math.round(displayTotal).toLocaleString()}`, color: "var(--fraud-warning)" },
-          { label: "Countries Monitored", value: String(Object.keys(countryFraud).length), color: "var(--accent-color)" },
-          { label: "Avg Block Rate", value: "82.3%", color: "var(--fraud-cleared)" },
-        ].map((s) => (
-          <div key={s.label} className="bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] p-3">
-            <p className="text-xs text-[var(--text-tertiary)]">{s.label}</p>
-            <p className="text-lg font-semibold mt-0.5" style={{ color: s.color }}>{s.value}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="relative bg-[var(--bg-primary)] rounded-xl border border-[var(--border-primary)] shadow-[var(--card-shadow)] overflow-hidden">
-        <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full h-auto block">
-          {mapSvg()}
-        </svg>
-        <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-[var(--bg-elevated)]/85 backdrop-blur-sm border border-[var(--border-primary)] rounded-lg px-2.5 py-1.5 pointer-events-none">
-          <span className="w-2 h-2 rounded-full bg-[var(--fraud-critical)] animate-alert-pulse shrink-0" />
-          <span className="text-[10px] font-semibold text-[var(--fraud-critical)]">LIVE</span>
-        </div>
-        {countryPanel}
-        {legendPanel}
-        {activityFeed}
-      </div>
+    <div
+      ref={mapRef}
+      className="relative bg-[var(--bg-primary)] rounded-xl overflow-hidden select-none"
+      style={{
+        height: "calc(100vh - 200px)",
+        minHeight: 420,
+        boxShadow: "var(--card-shadow)",
+        cursor: isPanning ? "grabbing" : zoom > 1 ? "grab" : "default",
+      }}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
+    >
+      <svg
+        viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+        className="absolute inset-0 w-full h-full"
+        preserveAspectRatio="xMidYMid slice"
+        style={{
+          transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+          transformOrigin: "center center",
+          transition: isPanning ? "none" : "transform 0.08s ease-out",
+        }}
+      >
+        {mapSvg()}
+      </svg>
+      {liveStats}
+      {zoomControls}
+      {zoomIndicator}
+      {countryPanel}
+      {legendPanel}
+      {activityFeed}
     </div>
   );
 }
