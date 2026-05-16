@@ -324,8 +324,8 @@ export default function DashboardPage() {
                   <AreaChart data={threatData} margin={{ top: 4, right: 0, left: -28, bottom: 0 }}>
                     <defs>
                       <linearGradient id="tGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%"  stopColor="#E5FF8F" stopOpacity={0.35} />
-                        <stop offset="95%" stopColor="#E5FF8F" stopOpacity={0}    />
+                        <stop offset="5%"  stopColor="#8BBF00" stopOpacity={0.35} />
+                        <stop offset="95%" stopColor="#8BBF00" stopOpacity={0}    />
                       </linearGradient>
                     </defs>
                     <XAxis dataKey="m" tick={{ fontSize: 8, fill: "var(--text-tertiary)" }} axisLine={false} tickLine={false} />
@@ -340,7 +340,7 @@ export default function DashboardPage() {
                       }}
                       itemStyle={{ color: "var(--brand-primary)" }}
                     />
-                    <Area type="monotone" dataKey="v" stroke="#E5FF8F" strokeWidth={2} fill="url(#tGrad)" />
+                    <Area type="monotone" dataKey="v" stroke="#8BBF00" strokeWidth={2} fill="url(#tGrad)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
