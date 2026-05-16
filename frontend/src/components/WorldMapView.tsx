@@ -382,16 +382,18 @@ export default function WorldMapView({
         </filter>
       </defs>
 
-      <rect width={WIDTH} height={HEIGHT} fill="var(--bg-secondary)" />
+      <rect width={WIDTH} height={HEIGHT} fill="#F8F9FB" />
 
-      {/* Grid */}
-      <g opacity="0.10" stroke="var(--border-secondary)" strokeWidth="0.4">
-        {Array.from({ length: 9 }, (_, i) => {
-          const y = ((i + 1) / 10) * HEIGHT;
+      {/* Grid — denser at higher zoom */}
+      <g opacity="0.28" stroke="rgba(0,0,0,0.2)" strokeWidth={0.3 / zoom}>
+        {Array.from({ length: zoom >= 3 ? 17 : 9 }, (_, i) => {
+          const n = zoom >= 3 ? 18 : 10;
+          const y = ((i + 1) / n) * HEIGHT;
           return <line key={`h${i}`} x1="0" y1={y} x2={WIDTH} y2={y} />;
         })}
-        {Array.from({ length: 19 }, (_, i) => {
-          const x = ((i + 1) / 20) * WIDTH;
+        {Array.from({ length: zoom >= 3 ? 35 : 19 }, (_, i) => {
+          const n = zoom >= 3 ? 36 : 20;
+          const x = ((i + 1) / n) * WIDTH;
           return <line key={`v${i}`} x1={x} y1="0" x2={x} y2={HEIGHT} />;
         })}
       </g>
@@ -419,7 +421,7 @@ export default function WorldMapView({
                 ? (isHovered || isFlashing ? lossStroke(loss) : `${lossStroke(loss)}88`)
                 : "rgba(0,0,0,0.14)"
             }
-            strokeWidth={isHovered ? 1.6 : isFlashing ? 1.2 : 0.4}
+            strokeWidth={(isHovered ? 1.6 : isFlashing ? 1.2 : 0.5) / zoom}
             className="cursor-pointer"
             style={{
               transition:
@@ -428,6 +430,36 @@ export default function WorldMapView({
             onMouseEnter={() => setHoveredCountry(id)}
             onMouseLeave={() => setHoveredCountry(null)}
           />
+        );
+      })}
+
+      {/* Country name labels — revealed progressively as zoom increases */}
+      {zoom >= 2 && countries.map((geo, i) => {
+        const id = String((geo as any).id ?? i);
+        const data = countryFraud[id];
+        if (!data) return null;
+        const centroid = pathGen.centroid(geo as any);
+        if (!centroid || isNaN(centroid[0]) || isNaN(centroid[1])) return null;
+        const [cx, cy] = centroid;
+        const fs = 7 / zoom;
+        const showLoss = zoom >= 3;
+        return (
+          <g key={`label-${id}`} pointerEvents="none">
+            <text x={cx} y={cy - (showLoss ? fs * 0.7 : 0)} textAnchor="middle"
+                  fontSize={fs} fontWeight="600"
+                  style={{ paintOrder: "stroke", stroke: "#F8F9FB", strokeWidth: 2.5 / zoom, strokeLinejoin: "round" as const }}
+                  fill="#111111" opacity={0.85}>
+              {data.iso2}
+            </text>
+            {showLoss && (
+              <text x={cx} y={cy + fs * 1.1} textAnchor="middle"
+                    fontSize={fs * 0.85} fontWeight="500"
+                    style={{ paintOrder: "stroke", stroke: "#F8F9FB", strokeWidth: 2 / zoom, strokeLinejoin: "round" as const }}
+                    fill={lossStroke(data.lossM)} opacity={0.9}>
+                ${data.lossM}M
+              </text>
+            )}
+          </g>
         );
       })}
 

@@ -95,15 +95,7 @@ export default function AnalyticsClient({ countryFraud, alertTrends, fraudByType
   return (
     <div className="flex flex-col min-h-[calc(100vh-16px-48px)]">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Analytics</h1>
-          <p className="text-sm text-[var(--text-tertiary)] mt-1">
-            {activeTab === "Overview"
-              ? "Fraud detection performance and trend analysis — last 7 days"
-              : "Real-time threat monitoring — highest-impact countries"}
-          </p>
-        </div>
+      <div className="flex items-center justify-end mb-4">
         <button
           onClick={() => setIsFullscreen(true)}
           className="p-2 rounded-lg text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
