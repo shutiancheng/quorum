@@ -59,6 +59,7 @@ export function NetworkProvider({
   // Simulate live signal ingestion
   useEffect(() => {
     const interval = setInterval(() => {
+      if (!participants || participants.length === 0) return;
       const p = participants[Math.floor(Math.random() * participants.length)];
       const signalTypes = SIGNAL_TYPES[p.type];
       const signal: LiveSignal = {

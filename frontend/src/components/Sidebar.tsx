@@ -103,7 +103,6 @@ export default function Sidebar() {
                     </span>
                   )}
                 </Link>
-                </Link>
               );
             })}
           </div>
