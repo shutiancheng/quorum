@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { ShieldAlert, CreditCard, Users, CheckCircle } from "lucide-react";
+import { ShieldAlert, CreditCard, Users, CheckCircle, TrendingDown, TrendingUp, ArrowRight } from "lucide-react";
+import {
+  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Cell,
+} from "recharts";
 import StatCard from "@/components/StatCard";
 import TabNav from "@/components/TabNav";
 import DataTable from "@/components/DataTable";
@@ -154,6 +158,191 @@ const tabTypeMap: Record<string, string | null> = {
   "First-Party": "First-Party", Collusion: "Collusion",
 };
 
+// ── Value Intelligence Section ────────────────────────────────────────────────
+
+const CUMULATIVE_SAVINGS = [
+  { m: "Jan", s: 192 }, { m: "Feb", s: 383 }, { m: "Mar", s: 575 },
+  { m: "Apr", s: 766 }, { m: "May", s: 958 }, { m: "Jun", s: 1150 },
+  { m: "Jul", s: 1341 }, { m: "Aug", s: 1533 }, { m: "Sep", s: 1725 },
+  { m: "Oct", s: 1916 }, { m: "Nov", s: 2108 }, { m: "Dec", s: 2300 },
+];
+
+const NETWORK_EFFECT = [
+  { n: "3",  saving: 1100 },
+  { n: "5",  saving: 1520 },
+  { n: "8",  saving: 1920 },
+  { n: "12", saving: 2300 },
+  { n: "15", saving: 2680 },
+  { n: "20", saving: 3150 },
+  { n: "25", saving: 3540 },
+];
+
+const BEFORE = [
+  { label: "Fraud Detection Rate",   value: "68%",    icon: TrendingDown },
+  { label: "False Positive Rate",    value: "2.3%",   icon: TrendingUp },
+  { label: "Avg Investigation Time", value: "4.2 hr", icon: TrendingUp },
+  { label: "Annual Fraud Loss",      value: "$2.8M",  icon: TrendingUp },
+];
+const AFTER = [
+  { label: "Fraud Detection Rate",   value: "87%",    delta: "+19pp",  good: true },
+  { label: "False Positive Rate",    value: "0.8%",   delta: "−1.5pp", good: true },
+  { label: "Avg Investigation Time", value: "1.1 hr", delta: "−74%",   good: true },
+  { label: "Annual Fraud Loss",      value: "$1.2M",  delta: "−57%",   good: true },
+];
+const SAVINGS_BREAKDOWN = [
+  { label: "Fraud losses prevented",      value: "$1.60M", pct: 70 },
+  { label: "False positive cost savings", value: "$420K",  pct: 18 },
+  { label: "Investigation time saved",    value: "$280K",  pct: 12 },
+];
+
+const TOOLTIP_STYLE = {
+  backgroundColor: "#fff", border: "1px solid rgba(0,0,0,0.08)",
+  borderRadius: 8, fontSize: 12,
+};
+const TICK = { fontSize: 11, fill: "#777" };
+
+function ValueSection() {
+  return (
+    <div className="space-y-4">
+      {/* Section header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">
+            Intelligence Sharing Value
+          </h2>
+          <p className="text-[11px] text-[var(--text-tertiary)] mt-0.5">
+            Estimated annual savings from joining the Quorum fraud intelligence network — PayPal profile
+          </p>
+        </div>
+        <div className="flex items-center gap-2 bg-[#F97316] text-white rounded-xl px-4 py-2"
+             style={{ boxShadow: "0 4px 16px rgba(249,115,22,0.35)" }}>
+          <span className="text-[11px] font-semibold uppercase tracking-wide opacity-80">Total annual savings</span>
+          <span className="text-xl font-black">$2.3M</span>
+        </div>
+      </div>
+
+      {/* Before / After comparison */}
+      <div className="rounded-xl overflow-hidden" style={{ boxShadow: "var(--card-shadow)" }}>
+        <div className="grid grid-cols-[1fr_auto_1fr]">
+          {/* Before */}
+          <div className="bg-[var(--bg-secondary)] p-5">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] mb-4">
+              Without Quorum
+            </p>
+            <div className="space-y-3">
+              {BEFORE.map((b) => (
+                <div key={b.label} className="flex items-center justify-between">
+                  <span className="text-xs text-[var(--text-secondary)]">{b.label}</span>
+                  <span className="text-sm font-bold text-[var(--text-tertiary)]">{b.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Arrow divider */}
+          <div className="bg-[var(--bg-tertiary)] flex flex-col items-center justify-center px-4 gap-2">
+            <ArrowRight className="w-5 h-5 text-[#F97316]" strokeWidth={2.5} />
+            <span className="text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider rotate-90 whitespace-nowrap">Quorum</span>
+          </div>
+
+          {/* After */}
+          <div className="bg-[var(--bg-primary)] p-5">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#F97316] mb-4">
+              With Quorum
+            </p>
+            <div className="space-y-3">
+              {AFTER.map((a) => (
+                <div key={a.label} className="flex items-center justify-between">
+                  <span className="text-xs text-[var(--text-secondary)]">{a.label}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded text-white"
+                          style={{ backgroundColor: "#14532D" }}>
+                      {a.delta}
+                    </span>
+                    <span className="text-sm font-bold text-[var(--text-primary)]">{a.value}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Savings breakdown bar */}
+        <div className="border-t border-[var(--border-primary)] bg-[var(--bg-primary)] px-5 py-4">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)] mb-3">
+            Savings breakdown
+          </p>
+          <div className="space-y-2">
+            {SAVINGS_BREAKDOWN.map((s) => (
+              <div key={s.label} className="flex items-center gap-3">
+                <span className="text-xs text-[var(--text-secondary)] w-48 shrink-0">{s.label}</span>
+                <div className="flex-1 h-2 rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
+                  <div className="h-full rounded-full bg-[#F97316]" style={{ width: `${s.pct}%` }} />
+                </div>
+                <span className="text-xs font-bold text-[var(--text-primary)] w-14 text-right">{s.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Charts row */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Cumulative savings */}
+        <div className="bg-[var(--bg-primary)] rounded-xl p-5" style={{ boxShadow: "var(--card-shadow)" }}>
+          <div className="mb-3">
+            <p className="text-sm font-semibold text-[var(--text-primary)]">Cumulative Savings Over 12 Months</p>
+            <p className="text-[11px] text-[var(--text-tertiary)] mt-0.5">Realised value from network participation — $K</p>
+          </div>
+          <ResponsiveContainer width="100%" height={160}>
+            <AreaChart data={CUMULATIVE_SAVINGS} margin={{ top: 4, right: 4, left: -8, bottom: 0 }}>
+              <defs>
+                <linearGradient id="savGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%"  stopColor="#F97316" stopOpacity={0.22} />
+                  <stop offset="95%" stopColor="#F97316" stopOpacity={0.01} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
+              <XAxis dataKey="m" tick={TICK} tickLine={false} axisLine={false} />
+              <YAxis tick={TICK} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v}K`} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => [`$${v}K`, "Savings to date"]} />
+              <Area type="monotone" dataKey="s" stroke="#F97316" strokeWidth={2.5}
+                    fill="url(#savGrad)" dot={false} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Network effect */}
+        <div className="bg-[var(--bg-primary)] rounded-xl p-5" style={{ boxShadow: "var(--card-shadow)" }}>
+          <div className="mb-3">
+            <p className="text-sm font-semibold text-[var(--text-primary)]">Network Effect — More Members, More Savings</p>
+            <p className="text-[11px] text-[var(--text-tertiary)] mt-0.5">Avg annual savings per institution by network size — $K</p>
+          </div>
+          <ResponsiveContainer width="100%" height={160}>
+            <BarChart data={NETWORK_EFFECT} margin={{ top: 4, right: 4, left: -8, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
+              <XAxis dataKey="n" tick={TICK} tickLine={false} axisLine={false} label={{ value: "institutions", position: "insideRight", offset: -4, style: { fontSize: 10, fill: "#aaa" } }} />
+              <YAxis tick={TICK} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v}K`} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => [`$${v}K`, "Avg savings/institution"]} />
+              <Bar dataKey="saving" radius={[5, 5, 0, 0]} barSize={28}>
+                {NETWORK_EFFECT.map((_, i) => (
+                  <Cell key={i}
+                    fill={i === 3 ? "#F97316" : "rgba(249,115,22,0.35)"}
+                    stroke={i === 3 ? "#EA6C08" : "none"}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+          <p className="text-[10px] text-[var(--text-tertiary)] mt-2 text-center">
+            ● Current network size: <span className="font-semibold text-[#F97316]">12 institutions</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardClient({ cases }: { cases: FraudCase[] }) {
   const [activeTab, setActiveTab] = useState("All Cases");
   const [search, setSearch] = useState("");
@@ -178,6 +367,9 @@ export default function DashboardClient({ cases }: { cases: FraudCase[] }) {
         <StatCard icon={Users}       label="Accounts Flagged" value="421"  change="-3.4%"  />
         <StatCard icon={CheckCircle} label="Cases Resolved"  value="1,893" change="+15.7%" />
       </div>
+
+      {/* Intelligence value */}
+      <ValueSection />
 
       {/* Cases table */}
       <div className="bg-[var(--bg-primary)] rounded-2xl" style={{ boxShadow: "var(--card-shadow)" }}>
