@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -16,6 +17,8 @@ import {
   Search,
   Scale,
   Zap,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 
 const sections = [
@@ -42,12 +45,16 @@ const sections = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(true);
 
   return (
-    <aside className="w-[56px] shrink-0 flex flex-col bg-[var(--sidebar-bg)] border-r border-[var(--sidebar-border)] h-screen">
+    <aside
+      className="shrink-0 flex flex-col bg-[var(--sidebar-bg)] border-r border-[var(--sidebar-border)] h-screen transition-[width] duration-200 ease-in-out overflow-hidden"
+      style={{ width: collapsed ? 56 : 200 }}
+    >
       {/* Logo */}
-      <div className="h-14 flex items-center justify-center border-b border-[var(--sidebar-border)] shrink-0">
-        <div className="w-7 h-7 rounded-lg bg-[var(--brand-primary)] flex items-center justify-center">
+      <div className="h-14 flex items-center gap-2.5 border-b border-[var(--sidebar-border)] shrink-0 px-[14px]">
+        <div className="w-7 h-7 rounded-lg bg-[var(--brand-primary)] flex items-center justify-center shrink-0">
           <span
             className="text-black text-sm font-bold leading-none"
             style={{ fontFamily: "Georgia, serif" }}
@@ -55,6 +62,11 @@ export default function Sidebar() {
             Q
           </span>
         </div>
+        {!collapsed && (
+          <span className="text-[var(--text-primary)] text-sm font-semibold whitespace-nowrap">
+            Quorum
+          </span>
+        )}
       </div>
 
       {/* Nav */}
@@ -62,7 +74,7 @@ export default function Sidebar() {
         {sections.map((section, si) => (
           <div
             key={si}
-            className={`flex flex-col items-center gap-0.5 px-2 ${
+            className={`flex flex-col gap-0.5 px-2 ${
               si > 0 ? "mt-2 pt-2 border-t border-[var(--sidebar-border)]" : ""
             }`}
           >
@@ -72,8 +84,10 @@ export default function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  title={item.label}
-                  className={`relative flex items-center justify-center w-9 h-9 rounded-xl transition-colors ${
+                  title={collapsed ? item.label : undefined}
+                  className={`relative flex items-center h-9 rounded-lg transition-colors ${
+                    collapsed ? "justify-center w-9 mx-auto" : "gap-2.5 px-2.5"
+                  } ${
                     isActive
                       ? "bg-[var(--sidebar-item-active)] text-[var(--sidebar-item-active-text)]"
                       : "text-[var(--text-tertiary)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--text-secondary)]"
@@ -83,12 +97,37 @@ export default function Sidebar() {
                     <span className="absolute -left-2 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-[var(--brand-primary)] rounded-r-full" />
                   )}
                   <item.icon className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+                  {!collapsed && (
+                    <span className="text-[13px] whitespace-nowrap">
+                      {item.label}
+                    </span>
+                  )}
+                </Link>
                 </Link>
               );
             })}
           </div>
         ))}
       </nav>
+
+      {/* Toggle */}
+      <div className="shrink-0 border-t border-[var(--sidebar-border)] p-2">
+        <button
+          onClick={() => setCollapsed((c) => !c)}
+          className={`flex items-center h-9 rounded-lg transition-colors text-[var(--text-tertiary)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--text-secondary)] ${
+            collapsed ? "justify-center w-9 mx-auto" : "gap-2.5 px-2.5 w-full"
+          }`}
+        >
+          {collapsed ? (
+            <PanelLeftOpen className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+          ) : (
+            <PanelLeftClose className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+          )}
+          {!collapsed && (
+            <span className="text-[13px] whitespace-nowrap">Collapse</span>
+          )}
+        </button>
+      </div>
     </aside>
   );
 }
