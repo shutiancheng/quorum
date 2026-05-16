@@ -15,7 +15,7 @@ import {
   Swords,
   Radio,
   Search,
-  Scale,
+
   Zap,
   Network,
   PanelLeftClose,
@@ -34,7 +34,6 @@ const sections = [
     { href: "/live-demo", icon: Zap, label: "Live Demo" },
     { href: "/signal-exchange", icon: Radio, label: "Signal Exchange" },
     { href: "/query-privacy", icon: Search, label: "Query & Privacy" },
-    { href: "/governance", icon: Scale, label: "Governance" },
     { href: "/orchestration", icon: Network, label: "Orchestration" },
   ],
   [
